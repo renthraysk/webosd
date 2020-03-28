@@ -1,3 +1,3 @@
-module junk/webosd
+module github.com/renthraysk/webosd
 
 go 1.14

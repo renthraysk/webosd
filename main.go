@@ -15,8 +15,8 @@ import (
 	"strconv"
 	"time"
 
-	"junk/webosd/eventsource"
-	"junk/webosd/poller/psu/fake"
+	"github.com/renthraysk/webosd/eventsource"
+	"github.com/renthraysk/webosd/poller/psu/fake"
 )
 
 type Color uint32

@@ -4,8 +4,8 @@ import (
 	"math/rand"
 	"time"
 
-	"junk/webosd/eventsource"
-	"junk/webosd/poller/psu"
+	"github.com/renthraysk/webosd/eventsource"
+	"github.com/renthraysk/webosd/poller/psu"
 )
 
 type dev struct{}

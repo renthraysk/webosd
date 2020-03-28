@@ -2,11 +2,12 @@ package main
 
 import (
 	"html/template"
-	"junk/webosd/eventsource"
 	"log"
 	"net/http"
 	"strconv"
 	"sync"
+
+	"github.com/renthraysk/webosd/eventsource"
 )
 
 type OSD struct {

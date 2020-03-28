@@ -3,7 +3,8 @@ package psu
 import (
 	"fmt"
 	"io"
-	"junk/webosd/eventsource"
+
+	"github.com/renthraysk/webosd/eventsource"
 )
 
 type Event struct {
