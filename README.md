@@ -38,4 +38,5 @@ Usage of ./webosd:
 ```
 
 ### Web
-[http://localhost:8080/settings](localhost:8080/settings) provides a UI to change presentation settings live.
+
+[http://localhost:8080/settings](http://localhost:8080/settings) provides a UI to change presentation settings live.
