@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>OSD Settings</title>
+	<style>
+		html,
+		body {
+			font-family: sans-serif;
+			background-color: #eee;
+			width: 100%;
+			height: 100%;
+			overflow: hidden;
+			margin: 0;
+			padding: 0;
+		}
+
+		input.color { font-family: monospace; width: 6em }
+
+		form {
+			display: grid;
+			grid-template-columns: min-content min-content;
+			grid-gap: 2px 5px;
+		}
+
+		form>label {
+			white-space: nowrap;
+			text-align: right;
+			align-self: end;
+		}
+
+		form>button[type="submit"] {
+			grid-column-end: span 2;
+		}
+
+		#font {
+			font-family: '{{.Settings.Font}}';
+		}
+	</style>
+</head>
+
+<body>
+	<form method="post">
+		<label for="backgroundColor">Background</label>
+		<div>
+			<input type="text" class="color" id="backgroundColorOutput" oninput="backgroundColor.value=this.value" value="{{.Settings.BackgroundColor}}">
+			<input type="color" id="backgroundColor" name="backgroundColor" value="{{.Settings.BackgroundColor}}"
+				oninput="backgroundColorOutput.value=backgroundColor.value">			
+		</div>
+
+		<label for="voltColor">Volts</label>
+		<div>
+			<input type="text" class="color" id="voltColorOutput" oninput="voltColor.value=this.value" value="{{.Settings.VoltColor}}">
+			<input type="color" id="voltColor" name="voltColor" value="{{.Settings.VoltColor}}"
+				oninput="voltColorOutput.value=voltColor.value">			
+		</div>
+
+		<label for="ampColor">Amps</label>
+		<div>
+			<input type="text" class="color" id="ampColorOutput" oninput="ampColor.value=this.value" value="{{.Settings.AmpColor}}">
+			<input type="color" id="ampColor" name="ampColor" value="{{.Settings.AmpColor}}"
+				oninput="ampColorOutput.value=ampColor.value">
+		</div>
+
+		<label for="font">Font</label>
+		<select id="font" name="font"
+			oninput="font.style.fontFamily=font.options[font.selectedIndex].style.fontFamily">
+			{{- range .Fonts -}}
+			<option style="font-family: '{{.}}'" {{if eq . $.Settings.Font}}selected{{end}}>{{.}}</option>
+			{{- end -}}
+		</select>
+
+		<label for="fontSize">Font Size</label>
+		<div>
+			<input type="range" min="1" max="720" id="fontSize" name="fontSize" value="{{.Settings.FontSize}}"
+				oninput="fontSizeOutput.value=parseInt(fontSize.value)">
+			<output name="fontSizeOutput" for="fontSize">{{.Settings.FontSize}}</output>
+		</div>
+
+		<label for="fontWeight">Font Weight</label>
+		<div>
+			<input type="range" min="100" max="900" id="fontWeight" name="fontWeight" value="{{.Settings.FontWeight}}"
+				oninput="fontWeightOutput.value=parseInt(fontWeight.value)" step="100">
+			<output name="fontWeightOutput" for="fontWeight">{{.Settings.FontWeight}}</output>
+		</div>
+
+		<button type="submit">Apply</button>
+	</form>
+</body>
+</html>
