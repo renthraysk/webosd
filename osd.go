@@ -11,7 +11,7 @@ import (
 )
 
 type OSD struct {
-	es              *eventsource.EventSource
+	*eventsource.EventSource
 	tmpl            *template.Template
 	eventSourcePath string
 
@@ -21,7 +21,7 @@ type OSD struct {
 
 func New(es *eventsource.EventSource, tmpl *template.Template, eventSourcePath string, settings *Settings) *OSD {
 	return &OSD{
-		es:              es,
+		EventSource:     es,
 		tmpl:            tmpl,
 		eventSourcePath: eventSourcePath,
 		settings:        settings,
@@ -41,7 +41,7 @@ func (o *OSD) setSettings(s *Settings) {
 	o.mu.Unlock()
 }
 
-func (o *OSD) indexHandler(w http.ResponseWriter, r *http.Request) {
+func (o *OSD) Index(w http.ResponseWriter, r *http.Request) {
 	s := o.copySettings()
 	data := struct {
 		EventSource string
@@ -56,7 +56,7 @@ func (o *OSD) indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (o *OSD) settingsHandler(w http.ResponseWriter, r *http.Request) {
+func (o *OSD) Settings(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		s := o.copySettings()
@@ -97,7 +97,7 @@ func (o *OSD) settingsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		// Set
 		o.setSettings(&s)
-		o.es.Publish(eventsource.FormatEvent("settings", s.String()))
+		o.Publish(eventsource.FormatEvent("settings", s.String()))
 		http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
 	}
 }

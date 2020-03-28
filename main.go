@@ -106,17 +106,16 @@ func main() {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	es := eventsource.New(ctx)
-	osd := New(es, tmpl, "/es", settings)
+	osd := New(eventsource.New(ctx), tmpl, "/es", settings)
 
 	// go routine to sample fake PSU 10 times a second.
-	go eventsource.Ticker(ctx, es, fake.New(), time.Second/10)
+	go eventsource.Ticker(ctx, osd, fake.New(), time.Second/10)
 
 	// Web server
 	mux := http.NewServeMux()
-	mux.Handle(osd.eventSourcePath, es)
-	mux.HandleFunc("/", osd.indexHandler)
-	mux.HandleFunc("/settings", osd.settingsHandler)
+	mux.Handle(osd.eventSourcePath, osd)
+	mux.HandleFunc("/", osd.Index)
+	mux.HandleFunc("/settings", osd.Settings)
 
 	s := http.Server{
 		Addr:        *addr,
