@@ -50,11 +50,6 @@ func (e ErrorEvent) WriteTo(w io.Writer) (int64, error) {
 
 type Subscriber chan<- Event
 
-type EventSourcer interface {
-	Publish(e Event) bool
-	ServeHTTP(w http.ResponseWriter, r *http.Request)
-}
-
 type EventSource struct {
 	in            chan Event
 	subscribeCh   chan Subscriber
@@ -152,8 +147,12 @@ type Poller interface {
 	Poll(t time.Time) Event
 }
 
-// Ticker polls p every d and publishes to es
-func Ticker(ctx context.Context, es EventSourcer, p Poller, d time.Duration) {
+type Publisher interface {
+	Publish(e Event) bool
+}
+
+// Ticker polls p every d and publishes to pub
+func Ticker(ctx context.Context, publisher Publisher, p Poller, d time.Duration) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	ticker := time.NewTicker(d)
@@ -162,7 +161,7 @@ func Ticker(ctx context.Context, es EventSourcer, p Poller, d time.Duration) {
 		select {
 		case t := <-ticker.C:
 			// @TODO Error handling...
-			es.Publish(p.Poll(t))
+			publisher.Publish(p.Poll(t))
 
 		case <-ctx.Done():
 			return
