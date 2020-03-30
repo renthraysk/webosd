@@ -44,6 +44,7 @@ type Settings struct {
 	Font            string
 	FontSize        uint64
 	FontWeight      uint64
+	LineHeight      uint64
 }
 
 func (s *Settings) String() string {
@@ -54,6 +55,7 @@ func (s *Settings) String() string {
 		"font":            []string{s.Font},
 		"fontSize":        []string{strconv.FormatUint(s.FontSize, 10)},
 		"fontWeight":      []string{strconv.FormatUint(s.FontWeight, 10)},
+		"lineHeight":      []string{strconv.FormatUint(s.LineHeight, 10)},
 	}
 	return v.Encode()
 }
@@ -67,6 +69,7 @@ func main() {
 		Font:            "monospace",
 		FontSize:        70,
 		FontWeight:      400,
+		LineHeight:      110,
 	}
 
 	log := log.New(os.Stderr, "", log.LstdFlags)
@@ -78,6 +81,7 @@ func main() {
 	flagset.StringVar(&settings.Font, "font", settings.Font, "font name")
 	flagset.Uint64Var(&settings.FontSize, "fontsize", settings.FontSize, "font size")
 	flagset.Uint64Var(&settings.FontWeight, "fontweight", settings.FontWeight, "font weight")
+	flagset.Uint64Var(&settings.LineHeight, "lineheight", settings.LineHeight, "line height")
 
 	flagset.Parse(os.Args[1:])
 	if _, _, err := net.SplitHostPort(*addr); err != nil {

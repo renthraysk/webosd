@@ -95,6 +95,13 @@ func (o *OSD) SetMux(mux *http.ServeMux, es, index, settings string) {
 					s.FontWeight = u
 				}
 			}
+
+			if lineHeight := r.PostFormValue("lineHeight"); lineHeight != "" {
+				if u, err := strconv.ParseUint(lineHeight, 10, 64); err == nil {
+					s.LineHeight = u
+				}
+			}
+
 			// Set
 			o.setSettings(&s)
 			o.Publish(eventsource.NewEvent("settings", s.String()))

@@ -83,6 +83,13 @@
 			<output name="fontWeightOutput" for="fontWeight">{{.Settings.FontWeight}}</output>
 		</div>
 
+		<label for="lineHeight">Line Height</label>
+		<div>
+			<input type="range" min="100" max="200" id="lineHeight" name="lineHeight" value="{{.Settings.LineHeight}}"
+				oninput="lineHeightOutput.value=parseInt(lineHeight.value)">
+			<output name="lineHeightOutput" for="lineHeight">{{.Settings.LineHeight}}</output>
+		</div>
+
 		<button type="submit">Apply</button>
 	</form>
 </body>

@@ -33,6 +33,8 @@ Usage of ./webosd:
     	font size (default 70)
   -fontweight uint
     	font weight (default 400)
+  -lineheight uint
+    	line height (default 110)
   -voltColor string
     	volt color (default "#008000")
 ```

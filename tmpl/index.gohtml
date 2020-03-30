@@ -4,7 +4,7 @@
 <title>OSD</title>
 <style type="text/css">
 /* Javascript below assumes the placement of this stylesheet, and the order of these rules */
-body { font-family: '{{.Settings.Font}}'; font-size: {{.Settings.FontSize}}px; background-color: {{.Settings.BackgroundColor}}; margin: 0; padding: 0; } 
+body { font-family: '{{.Settings.Font}}'; line-height: {{.Settings.LineHeight}}%; font-size: {{.Settings.FontSize}}px; background-color: {{.Settings.BackgroundColor}}; margin: 0; padding: 0; } 
 .volts { color: {{.Settings.VoltColor}}; }
 .amps { color: {{.Settings.AmpColor}}; }
 .error .volts, .error .amps { color: {{.Settings.BackgroundColor}}; }
@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		cr[0].style.fontFamily = "'" + s.get("font") + "'"
 		cr[0].style.fontSize = s.get("fontSize") + "px"
 		cr[0].style.fontWeight = s.get("fontWeight")
+		cr[0].style.lineHeight = s.get("lineHeight") + "%"
 		cr[1].style.color = s.get("voltColor")
 		cr[2].style.color = s.get("ampColor")
 		cr[3].style.color = s.get("backgroundColor")
