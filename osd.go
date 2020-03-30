@@ -97,7 +97,7 @@ func (o *OSD) SetMux(mux *http.ServeMux, es, index, settings string) {
 			}
 			// Set
 			o.setSettings(&s)
-			o.Publish(eventsource.FormatEvent("settings", s.String()))
+			o.Publish(eventsource.NewEvent("settings", s.String()))
 			http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
 		}
 	}))

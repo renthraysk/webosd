@@ -3,7 +3,6 @@ package eventsource
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -14,9 +13,9 @@ type Event interface {
 	io.WriterTo
 }
 
-type Bytes []byte
+type eventBytes []byte
 
-func FormatEvent(event, data string) Bytes {
+func NewEvent(event, data string) Event {
 	var b bytes.Buffer
 
 	b.WriteString("event: ")
@@ -30,22 +29,16 @@ func FormatEvent(event, data string) Bytes {
 	}
 	b.WriteString(data)
 	b.WriteString("\n\n")
-	return Bytes(b.Bytes())
+	return eventBytes(b.Bytes())
 }
 
-func (b Bytes) WriteTo(w io.Writer) (int64, error) {
-	n, err := w.Write([]byte(b))
+func (e eventBytes) WriteTo(w io.Writer) (int64, error) {
+	n, err := w.Write([]byte(e))
 	return int64(n), err
 }
 
-type ErrorEvent struct{ err error }
-
-func WrapError(err error) ErrorEvent { return ErrorEvent{err: err} }
-
-func (e ErrorEvent) Error() string { return e.err.Error() }
-func (e ErrorEvent) WriteTo(w io.Writer) (int64, error) {
-	n, err := fmt.Fprintf(w, "event: error\ndata: %s\n\n", e.err.Error())
-	return int64(n), err
+func NewEventFromError(err error) Event {
+	return NewEvent("error", err.Error())
 }
 
 type Subscriber chan<- Event
