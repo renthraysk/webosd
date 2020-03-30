@@ -55,35 +55,37 @@ func New(ctx context.Context) *EventSource {
 		subscribeCh:   make(chan Subscriber, 2),
 		unsubscribeCh: make(chan Subscriber, 2),
 	}
-	go func(ctx context.Context, cancel context.CancelFunc) {
-		defer cancel()
-		subscribers := make(map[Subscriber]struct{})
-		for {
-			select {
-			case e, ok := <-es.in:
-				if !ok {
-					return
-				}
-				for s := range subscribers {
-					select {
-					case s <- e:
-					default:
-						delete(subscribers, s)
-					}
-				}
+	go es.run(context.WithCancel(ctx))
+	return es
+}
 
-			case s := <-es.subscribeCh:
-				subscribers[s] = struct{}{}
-
-			case s := <-es.unsubscribeCh:
-				delete(subscribers, s)
-
-			case <-ctx.Done():
+func (es *EventSource) run(ctx context.Context, cancel context.CancelFunc) {
+	defer cancel()
+	subscribers := make(map[Subscriber]struct{})
+	for {
+		select {
+		case e, ok := <-es.in:
+			if !ok {
 				return
 			}
+			for s := range subscribers {
+				select {
+				case s <- e:
+				default:
+					delete(subscribers, s)
+				}
+			}
+
+		case s := <-es.subscribeCh:
+			subscribers[s] = struct{}{}
+
+		case s := <-es.unsubscribeCh:
+			delete(subscribers, s)
+
+		case <-ctx.Done():
+			return
 		}
-	}(context.WithCancel(ctx))
-	return es
+	}
 }
 
 func (es *EventSource) Publish(e Event) bool {
