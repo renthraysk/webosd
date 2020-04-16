@@ -19,6 +19,9 @@ import (
 	"github.com/renthraysk/webosd/poller/psu/fake"
 )
 
+var Version string = "xx.xx.xx"
+var Build string = "xxxx"
+
 type Color uint32
 
 func (c *Color) UnmarshalString(s string) error {
@@ -35,6 +38,13 @@ func (c *Color) UnmarshalString(s string) error {
 
 func (c Color) String() string {
 	return fmt.Sprintf("#%06x", uint32(c))
+}
+
+var fonts = []string{
+	"monospace",
+	"Consolas",
+	"Courier",
+	"Roboto Mono",
 }
 
 type Settings struct {
@@ -74,7 +84,7 @@ func main() {
 
 	log := log.New(os.Stderr, "", log.LstdFlags)
 	flagset := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	addr := flagset.String("addr", ":8080", "web server addr host:port")
+	addr := flagset.String("addr", "localhost:8080", "web server addr host:port")
 	backgroundColor := flagset.String("backgroundColor", settings.BackgroundColor.String(), "background color")
 	voltColor := flagset.String("voltColor", settings.VoltColor.String(), "volt color")
 	ampColor := flagset.String("ampColor", settings.AmpColor.String(), "amp color")
@@ -82,8 +92,15 @@ func main() {
 	flagset.Uint64Var(&settings.FontSize, "fontsize", settings.FontSize, "font size")
 	flagset.Uint64Var(&settings.FontWeight, "fontweight", settings.FontWeight, "font weight")
 	flagset.Uint64Var(&settings.LineHeight, "lineheight", settings.LineHeight, "line height")
+	version := flagset.Bool("version", false, "version")
 
 	flagset.Parse(os.Args[1:])
+
+	if *version {
+		fmt.Fprintf(os.Stdout, "Version: %s Build: %s\n", Version, Build)
+		os.Exit(0)
+	}
+
 	if _, _, err := net.SplitHostPort(*addr); err != nil {
 		log.Fatalf("invalid addr %q: %s", *addr, err)
 	}
@@ -127,6 +144,16 @@ func main() {
 	}
 	errCh := make(chan error, 1)
 	go func() { errCh <- s.ListenAndServe() }()
+
+	url := url.URL{
+		Scheme: "http",
+		Host:   *addr,
+		Path:   "/",
+	}
+
+	fmt.Fprintf(os.Stdout, "OSD %s\n", url.String())
+	url.Path = "/settings"
+	fmt.Fprintf(os.Stdout, "OSD Settings %s\n", url.String())
 
 	sigCh := make(chan os.Signal)
 	signal.Notify(sigCh, os.Interrupt) // cntrl+c to quit

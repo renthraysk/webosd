@@ -19,7 +19,11 @@
 		form {
 			display: grid;
 			grid-template-columns: min-content min-content;
-			grid-gap: 2px 5px;
+			grid-gap: 5px;
+		}
+
+		form>div {
+			white-space: nowrap;
 		}
 
 		form>label {
@@ -65,29 +69,29 @@
 		<select id="font" name="font"
 			oninput="font.style.fontFamily=font.options[font.selectedIndex].style.fontFamily">
 			{{- range .Fonts -}}
-			<option style="font-family: '{{.}}'" {{if eq . $.Settings.Font}}selected{{end}}>{{.}}</option>
+			<option style="font-family: '{{.}}'"{{if eq . $.Settings.Font}} selected{{end}}>{{.}}</option>
 			{{- end -}}
 		</select>
 
 		<label for="fontSize">Font Size</label>
 		<div>
+			<output name="fontSizeOutput" for="fontSize">{{.Settings.FontSize}}</output>
 			<input type="range" min="1" max="720" id="fontSize" name="fontSize" value="{{.Settings.FontSize}}"
 				oninput="fontSizeOutput.value=parseInt(fontSize.value)">
-			<output name="fontSizeOutput" for="fontSize">{{.Settings.FontSize}}</output>
 		</div>
 
 		<label for="fontWeight">Font Weight</label>
 		<div>
+			<output name="fontWeightOutput" for="fontWeight">{{.Settings.FontWeight}}</output>
 			<input type="range" min="100" max="900" id="fontWeight" name="fontWeight" value="{{.Settings.FontWeight}}"
 				oninput="fontWeightOutput.value=parseInt(fontWeight.value)" step="100">
-			<output name="fontWeightOutput" for="fontWeight">{{.Settings.FontWeight}}</output>
 		</div>
 
 		<label for="lineHeight">Line Height</label>
 		<div>
-			<input type="range" min="100" max="200" id="lineHeight" name="lineHeight" value="{{.Settings.LineHeight}}"
-				oninput="lineHeightOutput.value=parseInt(lineHeight.value) + '%'">
 			<output name="lineHeightOutput" for="lineHeight">{{.Settings.LineHeight}}%</output>
+			<input type="range" min="100" max="200" id="lineHeight" name="lineHeight" value="{{.Settings.LineHeight}}"
+				oninput="lineHeightOutput.value=parseInt(lineHeight.value) + '%'">		
 		</div>
 
 		<button type="submit">Apply</button>

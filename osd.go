@@ -42,13 +42,12 @@ func (o *OSD) SetMux(mux *http.ServeMux, es, index, settings string) {
 	mux.Handle(es, o)
 
 	mux.HandleFunc(index, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s := o.copySettings()
 		data := struct {
 			EventSource string
-			*Settings
+			Settings
 		}{
 			EventSource: es,
-			Settings:    &s,
+			Settings:    o.copySettings(),
 		}
 		w.Header().Set("Content-Type", "text/html")
 		if err := o.tmpl.ExecuteTemplate(w, "index.gohtml", data); err != nil {
@@ -59,18 +58,12 @@ func (o *OSD) SetMux(mux *http.ServeMux, es, index, settings string) {
 	mux.HandleFunc(settings, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			s := o.copySettings()
 			data := struct {
-				*Settings
+				Settings
 				Fonts []string
 			}{
-				Settings: &s,
-				Fonts: []string{
-					"monospace",
-					"Bitstream Vera Sans Mono",
-					"Consolas",
-					"Courier",
-					"Roboto Mono"},
+				Settings: o.copySettings(),
+				Fonts:    fonts,
 			}
 			w.Header().Set("Content-Type", "text/html")
 			if err := o.tmpl.ExecuteTemplate(w, "settings.gohtml", data); err != nil {
@@ -84,7 +77,14 @@ func (o *OSD) SetMux(mux *http.ServeMux, es, index, settings string) {
 			_ = s.BackgroundColor.UnmarshalString(r.PostFormValue("backgroundColor"))
 			_ = s.VoltColor.UnmarshalString(r.PostFormValue("voltColor"))
 			_ = s.AmpColor.UnmarshalString(r.PostFormValue("ampColor"))
-			s.Font = r.PostFormValue("font")
+			// Validate font, string parameter so have to prevent
+			if font := r.PostFormValue("font"); font != "" {
+				for _, name := range fonts {
+					if name == font {
+						s.Font = name
+					}
+				}
+			}
 			if fontSize := r.PostFormValue("fontSize"); fontSize != "" {
 				if u, err := strconv.ParseUint(fontSize, 10, 64); err == nil {
 					s.FontSize = u
