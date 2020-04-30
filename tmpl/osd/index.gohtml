@@ -11,13 +11,14 @@
 --line-height: {{.Settings.LineHeight}}%;
 --volt-color: {{.Settings.VoltColor}};
 --amp-color: {{.Settings.AmpColor}};
+--padding: 5px;
 --border-radius: 10px;
 --box-shadow: 10px 10px 20px #00000080;
 }
 
 #psu {
 	width: min-content;
-	padding: 5px;
+	padding: var(--padding);
 	font-family: var(--font-family); 
 	line-height: var(--line-height);
 	font-size: var(--font-size);
@@ -45,6 +46,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		let d = new URLSearchParams(e.data)
 		let s = document.documentElement.style
 		s.setProperty("--background-color", d.get("backgroundColor"))
+		s.setProperty("--padding", d.get("padding"))
 		s.setProperty("--font-family", d.get("fontFamily"))
 		s.setProperty("--font-size", d.get("fontSize"))
 		s.setProperty("--font-weight", d.get("fontWeight"))

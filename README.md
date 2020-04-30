@@ -19,14 +19,13 @@ Use the Browser plugin, with the URL set to [http://localhost:8080/](http://loca
 
 ### Command line
 ```
-$ ./webosd -h
 Usage of ./webosd:
   -addr string
     	web server addr host:port (default "localhost:8080")
   -ampColor string
-    	amp color (default "#ffff00")
+    	RGB amp color (default "#ffff00")
   -backgroundColor string
-    	background color (default "#000000ff")
+    	RGBA background color (default "#000000ff")
   -font string
     	font name (default "monospace")
   -fontsize uint
@@ -35,12 +34,14 @@ Usage of ./webosd:
     	font weight (default 400)
   -lineheight uint
     	line height (default 110)
+  -padding uint
+    	padding
   -psu string
     	psu driver name (default "fake")
   -version
     	version
   -voltColor string
-    	volt color (default "#008000")
+    	RGB volt color (default "#008000")
 
 ```
 

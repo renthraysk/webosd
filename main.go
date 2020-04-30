@@ -31,7 +31,7 @@ var fonts = []string{
 
 type Settings struct {
 	BackgroundColor RGBA
-	Opacity         float64
+	Padding         uint64
 	VoltColor       RGB
 	AmpColor        RGB
 	FontFamily      string
@@ -43,6 +43,7 @@ type Settings struct {
 func (s *Settings) String() string {
 	v := url.Values{
 		"backgroundColor": []string{s.BackgroundColor.String()},
+		"padding":         []string{strconv.FormatUint(s.Padding, 10) + "px"},
 		"voltColor":       []string{s.VoltColor.String()},
 		"ampColor":        []string{s.AmpColor.String()},
 		"fontFamily":      []string{s.FontFamily},
@@ -69,6 +70,7 @@ func main() {
 	flagset := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	addr := flagset.String("addr", "localhost:8080", "web server addr host:port")
 	backgroundColor := flagset.String("backgroundColor", settings.BackgroundColor.String(), "RGBA background color")
+	flagset.Uint64Var(&settings.Padding, "padding", settings.Padding, "padding")
 	voltColor := flagset.String("voltColor", settings.VoltColor.String(), "RGB volt color")
 	ampColor := flagset.String("ampColor", settings.AmpColor.String(), "RGB amp color")
 	psu := flagset.String("psu", "fake", "psu driver name")

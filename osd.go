@@ -66,7 +66,6 @@ func (o *OSD) settings(w http.ResponseWriter, r *http.Request) {
 				log.Printf("failed to parse backgroundColor %q: %v", backgroundColor, err)
 			}
 		}
-
 		if alpha := r.PostFormValue("backgroundAlpha"); alpha != "" {
 			if a, err := strconv.ParseUint(alpha, 10, 32); err == nil {
 				if a >= 0xFF {
@@ -78,6 +77,13 @@ func (o *OSD) settings(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
+
+		if padding := r.PostFormValue("padding"); padding != "" {
+			if p, err := strconv.ParseUint(padding, 10, 64); err == nil {
+				s.Padding = p
+			}
+		}
+
 		if voltColor := r.PostFormValue("voltColor"); voltColor != "" {
 			if err := s.VoltColor.UnmarshalString(voltColor); err != nil {
 				log.Printf("failed to parse voltColor %q: %v", voltColor, err)

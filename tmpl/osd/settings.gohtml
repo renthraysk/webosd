@@ -13,11 +13,12 @@
 --amp-color: {{.Settings.AmpColor}};
 --border-radius: 10px;
 --box-shadow: 10px 10px 20px #00000080;
+--padding: 5px;
 }
 
 #psu {
 	width: min-content;
-	padding: 5px;
+	padding: var(--padding);
 	font-family: var(--font-family); 
 	line-height: var(--line-height);
 	font-size: var(--font-size);
@@ -32,7 +33,6 @@
 .volts:after { content: "V"; }
 .amps:after { content: "A"; }
 .error { opacity: 0; }
-
 html,
 body {
 	font-family: sans-serif;
@@ -67,7 +67,7 @@ form>button[type="submit"] {
 }
 
 #font {
-	font-family: var((--font-family);
+	font-family: var(--font-family);
 }
 </style>
 <script>
@@ -82,6 +82,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		let d = new URLSearchParams(e.data)
 		let s = document.documentElement.style
 		s.setProperty("--background-color", d.get("backgroundColor"))
+		s.setProperty("--padding", d.get("padding"))
 		s.setProperty("--font-family", d.get("fontFamily"))
 		s.setProperty("--font-size", d.get("fontSize"))
 		s.setProperty("--font-weight", d.get("fontWeight"))
@@ -111,6 +112,12 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		<div>
 			<input type="range" min="0" max="255" id="bgAlpha" name="backgroundAlpha" value="{{.Settings.BackgroundColor.A}}" oninput="bgAlphaOutput.value=parseFloat(bgAlpha.value)" >
 			<output id="bgAlphaOutput" for="bgAlpha">{{.Settings.BackgroundColor.A}}</output>		
+		</div>
+
+		<label for="padding">Padding</label>
+		<div>
+			<input type="range" min="0" max="100" id="padding" name="padding" value="{{.Settings.Padding}}" oninput="paddingOutput.value=parseInt(padding.value)+'px';document.documentElement.style.setProperty('--padding', this.value+'px')">
+			<output name="paddingOutput" for="padding">{{.Settings.Padding}}px</output>
 		</div>
 
 		<label for="voltColor">Volts</label>
