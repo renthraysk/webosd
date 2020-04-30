@@ -9,11 +9,11 @@ Proof of concept using a web server to broadcast device measurements* using an [
 Start the web server
 ```$ ./webosd```
 
-Navigate to [http://localhost:8080/](http://localhost:8080/)
+Navigate to [http://localhost:8080/](http://localhost:8080/osd)
 
 ### OBS Studio
 
-Use the Browser plugin, with the URL set to [http://localhost:8080/](http://localhost:8080/)
+Use the Browser plugin, with the URL set to [http://localhost:8080/](http://localhost:8080/osd)
 
 ## Settings
 
@@ -22,11 +22,11 @@ Use the Browser plugin, with the URL set to [http://localhost:8080/](http://loca
 $ ./webosd -h
 Usage of ./webosd:
   -addr string
-    	web server addr host:port (default ":8080")
+    	web server addr host:port (default "localhost:8080")
   -ampColor string
     	amp color (default "#ffff00")
   -backgroundColor string
-    	background color (default "#000000")
+    	background color (default "#000000ff")
   -font string
     	font name (default "monospace")
   -fontsize uint
@@ -35,10 +35,15 @@ Usage of ./webosd:
     	font weight (default 400)
   -lineheight uint
     	line height (default 110)
+  -psu string
+    	psu driver name (default "fake")
+  -version
+    	version
   -voltColor string
     	volt color (default "#008000")
+
 ```
 
 ### Web
 
-[http://localhost:8080/settings](http://localhost:8080/settings) provides a UI to change presentation settings live.
+[http://localhost:8080/osd/settings](http://localhost:8080/osd/settings) provides a UI to change presentation settings live.
