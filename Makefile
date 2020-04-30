@@ -7,9 +7,11 @@ BINARY=webosd
 BUILD=$(shell git rev-parse HEAD)
 VERSION=$(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null)
 DIRTY=$(shell test -n "`git status --porcelain`" && echo "-dirty" || echo "")
-LDFLAGS=-X main.Version=${VERSION} -X main.Build=${BUILD}$(DIRTY)
+LDFLAGS=-X main.Version=${VERSION} -X main.Build=${BUILD}$(DIRTY) -s -w
 
-webosd: main.go osd.go $(wildcard eventsource/*.go) $(wildcard poller/*.go)
+TMPL=tmpl/index.gohtml tmpl/osd/index.gohtml tmpl/osd/settings.gohtml
+
+webosd: main.go osd.go $(wildcard eventsource/*.go) $(wildcard conn/*.go) $(wildcard device/*.go)
 
 .PHONY: build
 build: webosd
@@ -31,10 +33,10 @@ build_static: webosd
 .dist/darwin_amd64/webosd:
 	GOOS=darwin GOARCH=amd64 $(GOBUILD) $(GOOPTS) -ldflags "$(LDFLAGS)" -o $@ 
 	
-webosd-$(VERSION).%.tar.gz: .dist/%/webosd tmpl/index.gohtml tmpl/settings.gohtml
+webosd-$(VERSION).%.tar.gz: .dist/%/webosd $(TMPL)
 	tar -zc --transform="s,^$(dir $<),webosd/,;s,^tmpl/,webosd/tmpl/," -f $@ $^
 
-webosd-$(VERSION).windows_amd64.tar.gz: .dist/windows_amd64/webosd.exe tmpl/index.gohtml tmpl/settings.gohtml
+webosd-$(VERSION).windows_amd64.tar.gz: .dist/windows_amd64/webosd.exe $(TMPL)
 	tar -zc --transform="s,^.dist/windows_amd64/,webosd/,;s,^tmpl/,webosd/tmpl/," -f $@ $^
 
 .PHONY: clean

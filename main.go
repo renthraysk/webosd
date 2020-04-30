@@ -15,30 +15,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/renthraysk/webosd/device"
 	"github.com/renthraysk/webosd/eventsource"
-	"github.com/renthraysk/webosd/poller/psu/fake"
 )
 
 var Version string = "xx.xx.xx"
 var Build string = "xxxx"
-
-type Color uint32
-
-func (c *Color) UnmarshalString(s string) error {
-	if len(s) != 7 || s[0] != '#' {
-		return fmt.Errorf("invalid color length %q", s)
-	}
-	u, err := strconv.ParseUint(s[1:], 16, 32)
-	if err != nil {
-		return err
-	}
-	*c = Color(u)
-	return nil
-}
-
-func (c Color) String() string {
-	return fmt.Sprintf("#%06x", uint32(c))
-}
 
 var fonts = []string{
 	"monospace",
@@ -48,9 +30,10 @@ var fonts = []string{
 }
 
 type Settings struct {
-	BackgroundColor Color
-	VoltColor       Color
-	AmpColor        Color
+	BackgroundColor RGBA
+	Opacity         float64
+	VoltColor       RGB
+	AmpColor        RGB
 	Font            string
 	FontSize        uint64
 	FontWeight      uint64
@@ -73,9 +56,9 @@ func (s *Settings) String() string {
 func main() {
 
 	settings := &Settings{
-		BackgroundColor: 0x000000,
-		VoltColor:       0x008000,
-		AmpColor:        0xFFFF00,
+		BackgroundColor: RGBA{RGB: RGB{R: 0, G: 0, B: 0}, A: 255},
+		VoltColor:       RGB{G: 0x80},
+		AmpColor:        RGB{R: 0xFF, G: 0xFF},
 		Font:            "monospace",
 		FontSize:        70,
 		FontWeight:      400,
@@ -88,6 +71,7 @@ func main() {
 	backgroundColor := flagset.String("backgroundColor", settings.BackgroundColor.String(), "background color")
 	voltColor := flagset.String("voltColor", settings.VoltColor.String(), "volt color")
 	ampColor := flagset.String("ampColor", settings.AmpColor.String(), "amp color")
+	psu := flagset.String("psu", "fake", "psu driver name")
 	flagset.StringVar(&settings.Font, "font", settings.Font, "font name")
 	flagset.Uint64Var(&settings.FontSize, "fontsize", settings.FontSize, "font size")
 	flagset.Uint64Var(&settings.FontWeight, "fontweight", settings.FontWeight, "font weight")
@@ -121,20 +105,26 @@ func main() {
 		log.Fatalf("invalid amp color: %s", err)
 	}
 
-	tmpl, err := template.New("main").ParseFiles("./tmpl/index.gohtml", "./tmpl/settings.gohtml")
+	osdTmpl := template.Must(template.New("main").ParseFiles("./tmpl/osd/index.gohtml", "./tmpl/osd/settings.gohtml"))
+
+	p, err := device.New(*psu, "")
 	if err != nil {
-		log.Fatalf("failed to load templates: %s", err)
+		log.Printf("failed to create device %q: %s", *psu, err)
+		os.Exit(1)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	osd := New(eventsource.New(ctx), tmpl, settings)
+	osd := New(eventsource.New(ctx), "/es", osdTmpl, settings)
 
-	// go routine to sample fake PSU 10 times a second.
-	go eventsource.Ticker(ctx, osd, fake.New(), time.Second/10)
+	// 10 times a second
+	go eventsource.Ticker(ctx, osd, p.Poll, time.Second/10)
 
 	// Web server
 	mux := http.NewServeMux()
-	osd.SetMux(mux, "/es", "/", "/settings")
+
+	mux.Handle("/", index())
+
+	osd.SetMux(mux, "/osd", "/osd/settings")
 
 	s := http.Server{
 		Addr:        *addr,
@@ -151,8 +141,10 @@ func main() {
 		Path:   "/",
 	}
 
+	fmt.Fprintf(os.Stdout, "Index %s\n", url.String())
+	url.Path = "/osd"
 	fmt.Fprintf(os.Stdout, "OSD %s\n", url.String())
-	url.Path = "/settings"
+	url.Path = "/osd/settings"
 	fmt.Fprintf(os.Stdout, "OSD Settings %s\n", url.String())
 
 	sigCh := make(chan os.Signal)
@@ -178,4 +170,17 @@ func main() {
 	if err != nil {
 		os.Exit(1)
 	}
+}
+
+func index() http.Handler {
+	tmpl := template.Must(template.ParseFiles("./tmpl/index.gohtml"))
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			http.Redirect(w, r, r.URL.String(), http.StatusSeeOther)
+			return
+		}
+
+		tmpl.ExecuteTemplate(w, "index.gohtml", nil)
+	})
 }

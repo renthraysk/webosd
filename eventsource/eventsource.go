@@ -13,6 +13,10 @@ type Event interface {
 	io.WriterTo
 }
 
+type Publisher interface {
+	Publish(e Event) bool
+}
+
 type eventBytes []byte
 
 func NewEvent(event, data string) Event {
@@ -88,6 +92,7 @@ func (es *EventSource) run(ctx context.Context, cancel context.CancelFunc) {
 	}
 }
 
+// Publisher, implementation of Publisher interface
 func (es *EventSource) Publish(e Event) bool {
 	select {
 	case es.in <- e:
@@ -138,16 +143,8 @@ func (es *EventSource) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type Poller interface {
-	Poll(t time.Time) Event
-}
-
-type Publisher interface {
-	Publish(e Event) bool
-}
-
-// Ticker polls p every d and publishes to pub
-func Ticker(ctx context.Context, publisher Publisher, p Poller, d time.Duration) {
+// Ticker calls f every d and publishes to publisher
+func Ticker(ctx context.Context, publisher Publisher, f func(t time.Time) Event, d time.Duration) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	ticker := time.NewTicker(d)
@@ -156,7 +153,7 @@ func Ticker(ctx context.Context, publisher Publisher, p Poller, d time.Duration)
 		select {
 		case t := <-ticker.C:
 			// @TODO Error handling...
-			publisher.Publish(p.Poll(t))
+			publisher.Publish(f(t))
 
 		case <-ctx.Done():
 			return

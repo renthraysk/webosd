@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>OSD Settings</title>
+<style type="text/css">
+/* Javascript below assumes the placement of this stylesheet, and the order of these rules */
+#psu {
+	width:  min-content;
+	padding: 5px;
+	font-family: '{{.Settings.Font}}'; 
+	line-height: {{.Settings.LineHeight}}%;
+	font-size: {{.Settings.FontSize}}px;
+	font-weight: {{.Settings.FontWeight}};
+	background-color: {{.Settings.BackgroundColor}};
+	transition: opacity .5s;
+	border-radius: 10px;
+	box-shadow: 10px 10px 20px #00000080;
+} 
+.volts { color: {{.Settings.VoltColor}}; text-align: right; }
+.amps { color: {{.Settings.AmpColor}}; text-align: right; }
+.volts:after { content: "V"; }
+.amps:after { content: "A"; }
+.error { opacity: 0; }
+html,
+body {
+	font-family: sans-serif;
+	background-color: #eee;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	margin: 0;
+	padding: 0;
+}
+
+input.color { font-family: monospace; width: 6em }
+
+form {
+	display: grid;
+	grid-template-columns: min-content min-content;
+	grid-gap: 5px;
+}
+
+form>div {
+	white-space: nowrap;
+}
+
+form>label {
+	white-space: nowrap;
+	text-align: right;
+	align-self: end;
+}
+
+form>button[type="submit"] {
+	grid-column-end: span 2;
+}
+
+#font {
+	font-family: '{{.Settings.Font}}';
+}
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", function(e) {
+	let source = new EventSource({{.EventSource}});
+	let psu = document.getElementById("psu")
+	let volts = psu.querySelector(".volts")
+	let amps = psu.querySelector(".amps")
+
+	source.addEventListener("settings", (e) => {
+		let s = new URLSearchParams(e.data)
+		let cr = document.styleSheets[0].cssRules
+		cr[0].style.backgroundColor = s.get("backgroundColor")
+		cr[0].style.fontFamily = s.get("font")
+		cr[0].style.fontSize = s.get("fontSize") + "px"
+		cr[0].style.fontWeight = s.get("fontWeight")
+		cr[0].style.lineHeight = s.get("lineHeight") + "%"
+		cr[1].style.color = s.get("voltColor")
+		cr[2].style.color = s.get("ampColor")
+	})
+	source.addEventListener("error", (e) => psu.classList.add("error"))
+	source.addEventListener("open", (e) => psu.classList.remove("error"))
+	source.addEventListener("volts", (e) => volts.innerText = e.data);
+	source.addEventListener("amps", (e) => amps.innerText = e.data);
+});
+</script>
+</head>
+<body>
+	<div id="psu" class="error">
+		<div class="volts" title="Volts"></div>
+		<div class="amps" title="Amps"></div>
+	</div>
+	<form method="post">
+		<label for="bgColor">Background</label>
+		<div>
+			<input type="text" class="color" id="bgColorOutput" oninput="bgColor.value=this.value" value="{{.Settings.BackgroundColor.RGB}}">
+			<input type="color" id="bgColor" name="backgroundColor" value="{{.Settings.BackgroundColor.RGB}}" oninput="bgColorOutput.value=bgColor.value">			
+		</div>
+		<label for="bgAlpha">Background Alpha</label>
+		<div>
+			<input type="range" min="0" max="255" id="bgAlpha" name="backgroundAlpha" value="{{.Settings.BackgroundColor.A}}" oninput="bgAlphaOutput.value=parseFloat(bgAlpha.value)" >
+			<output id="bgAlphaOutput" for="bgAlpha">{{.Settings.BackgroundColor.A}}</output>		
+		</div>
+
+		<label for="voltColor">Volts</label>
+		<div>
+			<input type="text" class="color" id="voltColorOutput" oninput="voltColor.value=this.value" value="{{.Settings.VoltColor}}">
+			<input type="color" id="voltColor" name="voltColor" value="{{.Settings.VoltColor}}" oninput="voltColorOutput.value=voltColor.value">			
+		</div>
+
+		<label for="ampColor">Amps</label>
+		<div>
+			<input type="text" class="color" id="ampColorOutput" oninput="ampColor.value=this.value" value="{{.Settings.AmpColor}}">
+			<input type="color" id="ampColor" name="ampColor" value="{{.Settings.AmpColor}}" oninput="ampColorOutput.value=ampColor.value">
+		</div>
+
+		<label for="font">Font</label>
+		<select id="font" name="font" oninput="font.style.fontFamily=font.options[font.selectedIndex].style.fontFamily">
+			{{- range .Fonts -}}
+			<option style="font-family: '{{.}}'"{{if eq . $.Settings.Font}} selected{{end}}>{{.}}</option>
+			{{- end -}}
+		</select>
+
+		<label for="fontSize">Font Size</label>
+		<div>
+			<input type="range" min="8" max="128" id="fontSize" name="fontSize" value="{{.Settings.FontSize}}" oninput="fontSizeOutput.value=parseInt(fontSize.value)">
+			<output name="fontSizeOutput" for="fontSize">{{.Settings.FontSize}}</output>
+		</div>
+
+		<label for="fntWgt">Font Weight</label>
+		<div>
+			<input type="range" min="100" max="900" id="fntWgt" name="fontWeight" value="{{.Settings.FontWeight}}" oninput="fntWgtOutput.value=parseInt(fntWgt.value)" step="100">
+			<output name="fntWgtOutput" for="fntWgt">{{.Settings.FontWeight}}</output>
+		</div>
+
+		<label for="lineHeight">Line Height</label>
+		<div>
+			<input type="range" min="100" max="200" id="lineHeight" name="lineHeight" value="{{.Settings.LineHeight}}"
+				oninput="lineHeightOutput.value=parseInt(lineHeight.value) + '%'">
+			<output name="lineHeightOutput" for="lineHeight">{{.Settings.LineHeight}}%</output>
+		</div>
+
+		<button type="submit">Apply</button>
+	</form>
+</body>
+</html>
