@@ -92,7 +92,7 @@ func (o *OSD) settings(w http.ResponseWriter, r *http.Request) {
 		if font := r.PostFormValue("font"); font != "" {
 			for _, name := range fonts {
 				if name == font {
-					s.Font = name
+					s.FontFamily = name
 				}
 			}
 		}

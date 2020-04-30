@@ -34,7 +34,7 @@ type Settings struct {
 	Opacity         float64
 	VoltColor       RGB
 	AmpColor        RGB
-	Font            string
+	FontFamily      string
 	FontSize        uint64
 	FontWeight      uint64
 	LineHeight      uint64
@@ -45,10 +45,10 @@ func (s *Settings) String() string {
 		"backgroundColor": []string{s.BackgroundColor.String()},
 		"voltColor":       []string{s.VoltColor.String()},
 		"ampColor":        []string{s.AmpColor.String()},
-		"font":            []string{s.Font},
-		"fontSize":        []string{strconv.FormatUint(s.FontSize, 10)},
+		"fontFamily":      []string{s.FontFamily},
+		"fontSize":        []string{strconv.FormatUint(s.FontSize, 10) + "px"},
 		"fontWeight":      []string{strconv.FormatUint(s.FontWeight, 10)},
-		"lineHeight":      []string{strconv.FormatUint(s.LineHeight, 10)},
+		"lineHeight":      []string{strconv.FormatUint(s.LineHeight, 10) + "%"},
 	}
 	return v.Encode()
 }
@@ -59,7 +59,7 @@ func main() {
 		BackgroundColor: RGBA{RGB: RGB{R: 0, G: 0, B: 0}, A: 255},
 		VoltColor:       RGB{G: 0x80},
 		AmpColor:        RGB{R: 0xFF, G: 0xFF},
-		Font:            "monospace",
+		FontFamily:      "monospace",
 		FontSize:        70,
 		FontWeight:      400,
 		LineHeight:      110,
@@ -72,7 +72,7 @@ func main() {
 	voltColor := flagset.String("voltColor", settings.VoltColor.String(), "RGB volt color")
 	ampColor := flagset.String("ampColor", settings.AmpColor.String(), "RGB amp color")
 	psu := flagset.String("psu", "fake", "psu driver name")
-	flagset.StringVar(&settings.Font, "font", settings.Font, "font name")
+	flagset.StringVar(&settings.FontFamily, "font", settings.FontFamily, "font name")
 	flagset.Uint64Var(&settings.FontSize, "fontsize", settings.FontSize, "font size")
 	flagset.Uint64Var(&settings.FontWeight, "fontweight", settings.FontWeight, "font weight")
 	flagset.Uint64Var(&settings.LineHeight, "lineheight", settings.LineHeight, "line height")

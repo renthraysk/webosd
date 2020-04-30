@@ -52,13 +52,10 @@ func (c *RGBA) UnmarshalString(s string) error {
 	if err != nil {
 		return fmt.Errorf("invalid hex color %q: %w", s, err)
 	}
+	c.R = byte(u >> 24)
+	c.G = byte(u >> 16)
+	c.B = byte(u >> 8)
 	c.A = byte(u)
-	u >>= 8
-	c.B = byte(u)
-	u >>= 8
-	c.G = byte(u)
-	u >>= 8
-	c.R = byte(u)
 	return nil
 }
 

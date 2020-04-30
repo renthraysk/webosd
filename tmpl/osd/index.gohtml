@@ -3,21 +3,32 @@
 <head>
 <title>OSD</title>
 <style type="text/css">
-/* Javascript below assumes the placement of this stylesheet, and the order of these rules */
+:root {
+--background-color: {{.Settings.BackgroundColor}};
+--font-family: {{.Settings.FontFamily}};
+--font-size: {{.Settings.FontSize}}px;
+--font-weight: {{.Settings.FontWeight}};
+--line-height: {{.Settings.LineHeight}}%;
+--volt-color: {{.Settings.VoltColor}};
+--amp-color: {{.Settings.AmpColor}};
+--border-radius: 10px;
+--box-shadow: 10px 10px 20px #00000080;
+}
+
 #psu {
 	width: min-content;
 	padding: 5px;
-	font-family: '{{.Settings.Font}}'; 
-	line-height: {{.Settings.LineHeight}}%;
-	font-size: {{.Settings.FontSize}}px;
-	font-weight: {{.Settings.FontWeight}};
-	background-color: {{.Settings.BackgroundColor}};
+	font-family: var(--font-family); 
+	line-height: var(--line-height);
+	font-size: var(--font-size);
+	font-weight: var(--font-weight);
+	background-color: var(--background-color);
 	transition: opacity .5s;
-	border-radius: 10px;
-	box-shadow: 10px 10px 20px #00000080;
+	border-radius: var(--border-radius);
+	box-shadow: var(--box-shadow);
 } 
-.volts { color: {{.Settings.VoltColor}}; text-align: right;}
-.amps { color: {{.Settings.AmpColor}}; text-align: right; }
+.volts { color: var(--volt-color); text-align: right;}
+.amps { color: var(--amp-color); text-align: right; }
 .volts:after { content: "V"; }
 .amps:after { content: "A"; }
 .error { opacity: 0; }
@@ -31,15 +42,15 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	let amps = psu.querySelector(".amps")
 
 	source.addEventListener("settings", (e) => {
-		let s = new URLSearchParams(e.data)
-		let cr = document.styleSheets[0].cssRules
-		cr[0].style.backgroundColor = s.get("backgroundColor")
-		cr[0].style.fontFamily = s.get("font")
-		cr[0].style.fontSize = s.get("fontSize") + "px"
-		cr[0].style.fontWeight = s.get("fontWeight")
-		cr[0].style.lineHeight = s.get("lineHeight") + "%"
-		cr[1].style.color = s.get("voltColor")
-		cr[2].style.color = s.get("ampColor")
+		let d = new URLSearchParams(e.data)
+		let s = document.documentElement.style
+		s.setProperty("--background-color", d.get("backgroundColor"))
+		s.setProperty("--font-family", d.get("fontFamily"))
+		s.setProperty("--font-size", d.get("fontSize"))
+		s.setProperty("--font-weight", d.get("fontWeight"))
+		s.setProperty("--line-height", d.get("lineHeight"))
+		s.setProperty("--volt-color", d.get("voltColor"))
+		s.setProperty("--amp-color", d.get("ampColor"))
 	})
 	source.addEventListener("error", (e) => psu.classList.add("error"))
 	source.addEventListener("open", (e) => psu.classList.remove("error"))
