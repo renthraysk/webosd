@@ -9,7 +9,7 @@ VERSION=$(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null)
 DIRTY=$(shell test -n "`git status --porcelain`" && echo "-dirty" || echo "")
 LDFLAGS=-X main.Version=${VERSION} -X main.Build=${BUILD}$(DIRTY) -s -w
 
-TMPL=tmpl/index.gohtml tmpl/osd/index.gohtml tmpl/osd/settings.gohtml
+HTML=tmpl/index.gohtml tmpl/osd/index.html tmpl/osd/settings.html
 
 webosd: main.go osd.go $(wildcard eventsource/*.go) $(wildcard conn/*.go) $(wildcard device/*.go)
 
@@ -33,10 +33,10 @@ build_static: webosd
 .dist/darwin_amd64/webosd:
 	GOOS=darwin GOARCH=amd64 $(GOBUILD) $(GOOPTS) -ldflags "$(LDFLAGS)" -o $@ 
 	
-webosd-$(VERSION).%.tar.gz: .dist/%/webosd $(TMPL)
+webosd-$(VERSION).%.tar.gz: .dist/%/webosd $(HTML)
 	tar -zc --transform="s,^$(dir $<),webosd/,;s,^tmpl/,webosd/tmpl/," -f $@ $^
 
-webosd-$(VERSION).windows_amd64.tar.gz: .dist/windows_amd64/webosd.exe $(TMPL)
+webosd-$(VERSION).windows_amd64.tar.gz: .dist/windows_amd64/webosd.exe $(HTML)
 	tar -zc --transform="s,^.dist/windows_amd64/,webosd/,;s,^tmpl/,webosd/tmpl/," -f $@ $^
 
 .PHONY: clean

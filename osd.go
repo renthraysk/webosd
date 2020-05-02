@@ -1,148 +1,55 @@
 package main
 
 import (
-	"html/template"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
-	"sync"
+	"os"
+	"path/filepath"
 
 	"github.com/renthraysk/webosd/eventsource"
 )
 
 type OSD struct {
 	*eventsource.EventSource
-	path      string
-	tmpl      *template.Template
-	mu        sync.Mutex // Mutex lock for settings below.
-	_settings *Settings
 }
 
-func New(es *eventsource.EventSource, path string, tmpl *template.Template, settings *Settings) *OSD {
+func New(es *eventsource.EventSource) *OSD {
 	return &OSD{
 		EventSource: es,
-		path:        path,
-		tmpl:        tmpl,
-		_settings:   settings,
-	}
-}
-
-func (o *OSD) copySettings() Settings {
-	o.mu.Lock()
-	defer o.mu.Unlock()
-	return *o._settings
-}
-
-func (o *OSD) setSettings(s *Settings) {
-	o.mu.Lock()
-	defer o.mu.Unlock()
-	*o._settings = *s
-}
-
-func (o *OSD) settings(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		data := struct {
-			Settings
-			EventSource string
-			Fonts       []string
-		}{
-			Settings:    o.copySettings(),
-			EventSource: o.path,
-			Fonts:       fonts,
-		}
-		w.Header().Set("Content-Type", "text/html")
-		if err := o.tmpl.ExecuteTemplate(w, "settings.gohtml", data); err != nil {
-			logPrintf(r, "settings template failed: %s", err)
-		}
-
-	case http.MethodPost:
-		// Get copy of settings
-		s := o.copySettings()
-		// modify as needed
-
-		if backgroundColor := r.PostFormValue("backgroundColor"); backgroundColor != "" {
-			if err := s.BackgroundColor.UnmarshalString(backgroundColor); err != nil {
-				log.Printf("failed to parse backgroundColor %q: %v", backgroundColor, err)
-			}
-		}
-		if alpha := r.PostFormValue("backgroundAlpha"); alpha != "" {
-			if a, err := strconv.ParseUint(alpha, 10, 32); err == nil {
-				if a >= 0xFF {
-					s.BackgroundColor.A = 0xFF
-				} else if a <= 0 {
-					s.BackgroundColor.A = 0
-				} else {
-					s.BackgroundColor.A = byte(a)
-				}
-			}
-		}
-
-		if padding := r.PostFormValue("padding"); padding != "" {
-			if p, err := strconv.ParseUint(padding, 10, 64); err == nil {
-				s.Padding = p
-			}
-		}
-
-		if voltColor := r.PostFormValue("voltColor"); voltColor != "" {
-			if err := s.VoltColor.UnmarshalString(voltColor); err != nil {
-				log.Printf("failed to parse voltColor %q: %v", voltColor, err)
-			}
-		}
-		if ampColor := r.PostFormValue("ampColor"); ampColor != "" {
-			if err := s.AmpColor.UnmarshalString(r.PostFormValue("ampColor")); err != nil {
-				log.Printf("failed to parse ampColor %q: %v", ampColor, err)
-			}
-		}
-		// Validate font, string parameter so have to prevent
-		if font := r.PostFormValue("font"); font != "" {
-			for _, name := range fonts {
-				if name == font {
-					s.FontFamily = name
-				}
-			}
-		}
-		if fontSize := r.PostFormValue("fontSize"); fontSize != "" {
-			if u, err := strconv.ParseUint(fontSize, 10, 64); err == nil {
-				s.FontSize = u
-			}
-		}
-		if fontWeight := r.PostFormValue("fontWeight"); fontWeight != "" {
-			if u, err := strconv.ParseUint(fontWeight, 10, 64); err == nil {
-				s.FontWeight = u
-			}
-		}
-
-		if lineHeight := r.PostFormValue("lineHeight"); lineHeight != "" {
-			if u, err := strconv.ParseUint(lineHeight, 10, 64); err == nil {
-				s.LineHeight = u
-			}
-		}
-
-		// Set
-		o.setSettings(&s)
-		o.Publish(eventsource.NewEvent("settings", s.String()))
-		http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
 	}
 }
 
 // SetMux sets up handlers for es, the EventSource, index and settings pages.
-func (o *OSD) SetMux(mux *http.ServeMux, index, settings string) {
-	mux.Handle(o.path, o)
-	mux.HandleFunc(index, func(w http.ResponseWriter, r *http.Request) {
-		data := struct {
-			EventSource string
-			Settings
-		}{
-			EventSource: o.path,
-			Settings:    o.copySettings(),
-		}
-		w.Header().Set("Content-Type", "text/html")
-		if err := o.tmpl.ExecuteTemplate(w, "index.gohtml", data); err != nil {
-			logPrintf(r, "index template failed: %s", err)
+func (o *OSD) SetMux(mux *http.ServeMux) {
+	mux.Handle("/es", o)
+	mux.HandleFunc("/osd/", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "./static/osd/index.html") })
+
+	mux.HandleFunc("/osd/css/root.css",
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/css")
+			w.Header().Set("Cache-Control", "no-store")
+			http.ServeFile(w, r, "./static/osd/css/root.css")
+		})
+
+	mux.HandleFunc("/osd/settings", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			http.ServeFile(w, r, "static/osd/settings.html")
+
+		case http.MethodPost:
+			var s Settings
+
+			r.ParseForm()
+			s.Set(r.PostForm)
+
+			if err := writeFile("./static/osd/css", "root.css", &s, 0666); err == nil {
+				o.Publish(eventsource.NewEvent("reload", ""))
+			}
+			http.Redirect(w, r, "/osd/settings", http.StatusSeeOther)
 		}
 	})
-	mux.HandleFunc(settings, o.settings)
 }
 
 func logPrintf(r *http.Request, format string, v ...interface{}) {
@@ -152,4 +59,24 @@ func logPrintf(r *http.Request, format string, v ...interface{}) {
 		return
 	}
 	log.Printf(format, v...)
+}
+
+func writeFile(path, name string, wt io.WriterTo, perm os.FileMode) error {
+	f, err := ioutil.TempFile(path, name)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(f.Name())
+
+	if _, err := wt.WriteTo(f); err != nil {
+		f.Close()
+		return err
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	if err := os.Rename(f.Name(), filepath.Join(path, name)); err != nil {
+		return err
+	}
+	return nil
 }

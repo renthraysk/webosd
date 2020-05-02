@@ -62,7 +62,3 @@ func (c *RGBA) UnmarshalString(s string) error {
 func (c RGBA) String() string {
 	return fmt.Sprintf("#%02x%02x%02x%02x", c.R, c.G, c.B, c.A)
 }
-
-func (c RGBA) RGBAString() string {
-	return fmt.Sprintf("rgba(%d, %d, %d, %.2f)", c.R, c.G, c.B, float32(c.A)/255)
-}

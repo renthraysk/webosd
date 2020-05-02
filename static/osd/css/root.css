@@ -1,0 +1,14 @@
+:root {
+--background-color: #000000dd;
+--font-family: monospace;
+--font-size: 38px;
+--font-weight: 900;
+--line-height: 100%;
+--volt-color: #00AA00;
+--amp-color: #ffff00;
+--padding: 10px;
+--border-radius: 15px;
+--box-shadow: none;
+--text-stroke-width: 1px;
+--text-stroke-color: #000000;
+}
