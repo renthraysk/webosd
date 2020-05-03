@@ -9,7 +9,7 @@ Proof of concept using a web server to broadcast device measurements* using an [
 Start the web server
 ```$ ./webosd```
 
-Navigate to [http://localhost:8080/osd](http://localhost:8080/osd)
+Navigate to [http://localhost:8080/osd/](http://localhost:8080/osd/)
 
 ### OBS Studio
 
