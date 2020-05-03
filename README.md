@@ -13,7 +13,7 @@ Navigate to [http://localhost:8080/osd/](http://localhost:8080/osd/)
 
 ### OBS Studio
 
-Use the Browser plugin, with the URL set to [http://localhost:8080/osd](http://localhost:8080/osd)
+Use the Browser plugin, with the URL set to [http://localhost:8080/osd/](http://localhost:8080/osd/)
 
 ## Settings
 
