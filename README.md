@@ -13,7 +13,8 @@ Navigate to [http://localhost:8080/osd/](http://localhost:8080/osd/)
 
 ### OBS Studio
 
-Use the Browser plugin, with the URL set to [http://localhost:8080/osd/](http://localhost:8080/osd/)
+Use the Browser plugin, with the URL set to [http://localhost:8080/osd/](http://localhost:8080/osd/) for read out,
+[http://localhost:8080/osd/graph](http://localhost:8080/osd/graph) for a line chart
 
 ## Settings
 
