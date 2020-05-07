@@ -1,0 +1,111 @@
+<html>
+
+<head>
+	<title>OSD Graph</title>
+	<link id="root" rel="stylesheet" type="text/css" href="/osd/css/root.css">
+	<style>
+	html, body { margin: 0; padding: 0 }
+	canvas { position: absolute; left: 0; top: 0; padding: var(--padding); border-radius: var(--border-radius); }
+	 #axis {
+		background-color: var(--background-color);
+		box-shadow: var(--box-shadow);
+		border: var(--border-width) solid transparent;
+		border: var(--border-width) var(--border-style) var(--border-color);
+	}
+	</style>
+	<script>
+
+		const maxVolts = 32
+		const maxAmps = 8
+		const tickLength = 5
+
+		function drawLine(ctx, x1, y1, x2, y2) {
+			ctx.beginPath()
+			ctx.moveTo(x1, y1)
+			ctx.lineTo(x2, y2)
+			ctx.stroke()
+			ctx.closePath()
+		}
+
+		function drawAxis(voltColor, ampColor) {
+			const axis = document.getElementById("axis")
+			const ctx = axis.getContext("2d")
+
+			ctx.translate(0, axis.height)
+			ctx.scale(1, -1)
+
+			ctx.lineWidth = 2
+
+			const g = ctx.createLinearGradient(0, 0, axis.width, 0)
+			g.addColorStop(0, voltColor)
+			g.addColorStop(1, ampColor)
+			ctx.strokeStyle = g
+			drawLine(ctx, 0, 1, axis.width, 1)
+			
+			ctx.strokeStyle = voltColor
+			drawLine(ctx, tickLength, 0, tickLength, axis.height)
+			for(let y = 2 * (axis.height/maxVolts); y <= axis.height; y += 2 * (axis.height/maxVolts)) {
+				drawLine(ctx, 0, y, tickLength, y)
+			}		
+			ctx.strokeStyle = ampColor
+			drawLine(ctx, axis.width - tickLength, 0, axis.width - tickLength, axis.height)
+			for(let y = (axis.height/maxAmps); y <= axis.height; y += (axis.height/maxAmps)) {
+				drawLine(ctx, axis.width-tickLength, y, axis.width, y)
+			}		
+		}
+
+		function LineChart(canvas, color, yscale) {
+			const ctx = canvas.getContext("2d")
+			ctx.translate(0, canvas.height)
+			ctx.scale(1, -1)
+			
+			ctx.lineWidth = canvas.height/128 || 1
+			ctx.shadowBlur = ctx.lineWidth * 2
+			ctx.strokeStyle = color
+			ctx.shadowColor = color
+			let x1, y, dx = 0
+			return function(e) {
+				if (dx == 0) {
+					dx = e.timeStamp / 64
+				}
+				let x2 = e.timeStamp / 64 - dx
+				if (x2 > canvas.width) {
+					const sx = x2 - x1
+					const img = ctx.getImageData(sx, 0, canvas.width, canvas.height)
+  					ctx.putImageData(img, 0, 0)
+					x1 -= sx
+					dx += sx
+					x2 = canvas.width
+				}
+				ctx.beginPath()
+				ctx.moveTo(x1, y)
+				y = parseFloat(e.data) * yscale
+				ctx.lineTo(x2, y)
+				x1 = x2
+				ctx.stroke()
+				ctx.closePath()	
+			}
+		}
+	
+		document.addEventListener("DOMContentLoaded", function (e) {
+			const s = getComputedStyle(document.documentElement)
+			const voltColor = s.getPropertyValue("--volt-color").trim()
+			const ampColor = s.getPropertyValue("--amp-color").trim()
+			const source = new EventSource("/es");
+
+			const height = 256
+
+			drawAxis(voltColor, ampColor)
+			source.addEventListener("volts", LineChart(document.getElementById("volts"), voltColor, height/maxVolts))
+			source.addEventListener("amps", LineChart(document.getElementById("amps"), ampColor, height/maxAmps))
+		});
+	</script>
+</head>
+
+<body>
+	<canvas id="axis" width=512" height="256"></canvas>
+	<canvas id="amps" width="512" height="256"></canvas>
+	<canvas id="volts" width="512" height="256"></canvas>
+</body>
+
+</html>

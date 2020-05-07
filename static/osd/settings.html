@@ -2,11 +2,12 @@
 <html>
 <head>
 	<title>OSD Settings</title>
-<link rel="stylesheet" type="text/css" href="/osd/css/root.css">
+<link id="root" rel="stylesheet" type="text/css" href="/osd/css/root.css">
 <style type="text/css">
 #psu {
 	width: min-content;
 	padding: var(--padding);
+	border: var(--border-width) var(--border-style) var(--border-color);
 	font-family: var(--font-family); 
 	line-height: var(--line-height);
 	font-size: var(--font-size);
@@ -70,25 +71,36 @@ form>button[type="submit"] {
 </style>
 <script>
 
-document.addEventListener("DOMContentLoaded", function(e) {
-	let source = new EventSource("/es");
-	let psu = document.getElementById("psu")
-	let volts = psu.querySelector(".volts")
-	let amps = psu.querySelector(".amps")
+function setSelected(options, value) {
+	for (var i = 0; i < options.length; i++) {
+		options[i].selected = options[i].value == value
+	}
+}
 
-
-	let s = getComputedStyle(document.documentElement)
-	let f = document.forms[0].elements
-
-	let bgColor = s.getPropertyValue("--background-color").trim()
+function setUI(e) {
+	const s = getComputedStyle(document.documentElement)
+	const f = document.forms[0].elements
+	const bgColor = s.getPropertyValue("--background-color").trim()
 	f["backgroundColor"].value = bgColor.substr(0, 7)
 	f["bgColorOutput"].value = f["backgroundColor"].value
 	f["backgroundAlpha"].value = parseInt(bgColor.substr(7, 2), 16)
 	f["bgAlphaOutput"].value = f["backgroundAlpha"].value
 	f["padding"].value = parseInt(s.getPropertyValue("--padding"))
 	f["paddingOutput"].value = f["padding"].value + "px"
+
+	f["borderWidth"].value = parseInt(s.getPropertyValue("--border-width"))
+	f["borderWidthOutput"].value = f["borderWidth"].value + "px" 
+	
+	setSelected(f["borderStyle"].options, s.getPropertyValue("--border-style").trim())
+	
+	f["borderColor"].value = s.getPropertyValue("--border-color").trim()
+	f["borderColorOutput"].value = f["borderColor"].value 
+
 	f["borderRadius"].value = parseInt(s.getPropertyValue("--border-radius"))
 	f["borderRadiusOutput"].value = f["borderRadius"].value + "px"
+
+	setSelected(f["fontFamily"].options, s.getPropertyValue("--font-family").trim())
+	
 	f["fontSize"].value = parseInt(s.getPropertyValue("--font-size"))
 	f["fontSizeOutput"].value = f["fontSize"].value + "px"
 	f["fontWeight"].value = parseInt(s.getPropertyValue("--font-weight"))
@@ -104,11 +116,25 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	f["textStrokeWidthOutput"].value = f["textStrokeWidth"].value + "px"
 	f["textStrokeColor"].value = s.getPropertyValue("--text-stroke-color").trim()
 	f["textStrokeColorOutput"].value = f["textStrokeColor"].value
+}
 
-
+document.addEventListener("DOMContentLoaded", function(e) {
+	console.log("DOMContentLoaded")
+	const source = new EventSource("/es");
 	source.addEventListener("error", (e) => psu.classList.add("error"))
 	source.addEventListener("open", (e) => psu.classList.remove("error"))
+
+	const r = document.getElementById("root")
+	source.addEventListener("reload", (e) => {	
+		r.href = "/osd/css/root.css?" + (new Date()).getTime()
+	})
+	r.addEventListener("load", (e) => setUI())
+	setUI()
+
+	const psu = document.getElementById("psu")
+	const volts = psu.querySelector(".volts")
 	source.addEventListener("volts", (e) => volts.innerText = e.data);
+	const amps = psu.querySelector(".amps")
 	source.addEventListener("amps", (e) => amps.innerText = e.data);
 });
 </script>
@@ -136,6 +162,36 @@ document.addEventListener("DOMContentLoaded", function(e) {
 			<output name="paddingOutput" for="padding"></output>
 		</div>
 
+		<label for="borderWidth">Border Width</label>
+		<div>
+			<input type="range" min="0" max="100" id="borderWidth" name="borderWidth" oninput="borderWidthOutput.value=parseInt(this.value)+'px';document.documentElement.style.setProperty('--border-width', this.value+'px')">
+			<output name="borderWidthOutput" for="borderWidth"></output>
+		</div>
+		
+		<label for="borderStyle">Border Style</label>
+		<div>
+			<select id="borderStyle" name="borderStyle" oninput="document.documentElement.style.setProperty('--border-style', this.value)">
+				<option value="none">none</option>
+				<option value="hidden">hidden</option>
+				<option value="dotted">dotted</option>
+				<option value="dashed">dashed</option>
+				<option value="solid">solid</option>
+				<option value="double">double</option>
+				<option value="groove">groove</option>
+				<option value="ridge">ridge</option>
+				<option value="inset">inset</option>
+				<option value="outset">outset</option>
+				<option value="initial">initial</option>
+				<option value="inherit">inherit</option>
+			</select>
+		</div>
+	
+		<label for="borderColor">Border Color</label>
+		<div>
+			<input type="text" class="color" id="borderColorOutput" oninput="borderColor.value=this.value">
+			<input type="color" id="borderColor" name="borderColor" oninput="borderColorOutput.value=borderColor.value;document.documentElement.style.setProperty('--border-color', this.value)">			
+		</div>
+
 		<label for="borderRadius">Border Radius</label>
 		<div>
 			<input type="range" min="0" max="100" id="borderRadius" name="borderRadius" oninput="borderRadiusOutput.value=parseInt(this.value)+'px';document.documentElement.style.setProperty('--border-radius', this.value+'px')">
@@ -154,8 +210,8 @@ document.addEventListener("DOMContentLoaded", function(e) {
 			<input type="color" id="ampColor" name="ampColor" oninput="ampColorOutput.value=ampColor.value;document.documentElement.style.setProperty('--amp-color', this.value)">
 		</div>
 
-		<label for="font">Font</label>
-		<select id="font" name="font" oninput="font.style.fontFamily=font.options[font.selectedIndex].style.fontFamily;document.documentElement.style.setProperty('--font-family', this.value)">
+		<label for="fontFamily">Font</label>
+		<select id="fontFamily" name="fontFamily" oninput="this.style.fontFamily=this.options[this.selectedIndex].style.fontFamily;document.documentElement.style.setProperty('--font-family', this.value)">
 			<option style="font-family: monospace">monospace</option>
 			<option style="font-family: 'Andale Mono', monospace" value="'Andale Mono', monospace">Andale Mono</option>
 			<option style="font-family: Consolas, monospace" value="Consolas, monospace">Consolas</option>

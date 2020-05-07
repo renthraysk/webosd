@@ -55,10 +55,11 @@ func (p *psu) Poll(t time.Time) eventsource.Event {
 	return NewEvent(1.0, 1.0)
 }
 
-type fake struct{}
+type fake struct {
+}
 
 func Fake() PSU { return &fake{} }
 
-func (*fake) Poll(t time.Time) eventsource.Event {
-	return NewEvent(11.75+rand.Float64()/3, 1.75+rand.Float64()/3)
+func (fake) Poll(t time.Time) eventsource.Event {
+	return NewEvent(11.75+rand.Float64(), 1.75+rand.Float64()/2)
 }

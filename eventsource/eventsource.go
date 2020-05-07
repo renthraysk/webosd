@@ -144,7 +144,7 @@ func (es *EventSource) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // Ticker calls f every d and publishes to publisher
-func Ticker(ctx context.Context, publisher Publisher, f func(t time.Time) Event, d time.Duration) {
+func (es *EventSource) Ticker(ctx context.Context, f func(t time.Time) Event, d time.Duration) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	ticker := time.NewTicker(d)
@@ -153,7 +153,7 @@ func Ticker(ctx context.Context, publisher Publisher, f func(t time.Time) Event,
 		select {
 		case t := <-ticker.C:
 			// @TODO Error handling...
-			publisher.Publish(f(t))
+			es.Publish(f(t))
 
 		case <-ctx.Done():
 			return

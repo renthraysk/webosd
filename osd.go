@@ -25,11 +25,14 @@ func New(es *eventsource.EventSource) *OSD {
 func (o *OSD) SetMux(mux *http.ServeMux) {
 	mux.Handle("/es", o)
 	mux.HandleFunc("/osd/", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "./static/osd/index.html") })
+	mux.HandleFunc("/osd/graph", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "./static/osd/graph.html") })
+
+	mux.Handle("/osd/js/", http.StripPrefix("/osd/js/", http.FileServer(http.Dir("./static/osd/js/"))))
 
 	mux.HandleFunc("/osd/css/root.css",
 		func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/css")
-			w.Header().Set("Cache-Control", "no-store")
+			w.Header().Set("Cache-Control", "no-cache")
 			http.ServeFile(w, r, "./static/osd/css/root.css")
 		})
 
@@ -75,8 +78,5 @@ func writeFile(path, name string, wt io.WriterTo, perm os.FileMode) error {
 	if err := f.Close(); err != nil {
 		return err
 	}
-	if err := os.Rename(f.Name(), filepath.Join(path, name)); err != nil {
-		return err
-	}
-	return nil
+	return os.Rename(f.Name(), filepath.Join(path, name))
 }

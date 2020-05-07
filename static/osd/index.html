@@ -1,51 +1,79 @@
 <!DOCTYPE html>
 <html>
-<head>
-<title>OSD</title>
-<link id="root" rel="stylesheet" type="text/css" href="/osd/css/root.css">
-<style type="text/css">
-#psu {
-	width: min-content;
-	padding: var(--padding);
-	font-family: var(--font-family); 
-	line-height: var(--line-height);
-	font-size: var(--font-size);
-	font-weight: var(--font-weight);
-	-webkit-text-stroke: var(--text-stroke-width) var(--text-stroke-color);
-	background-color: var(--background-color);
-	transition: opacity .5s;
-	border-radius: var(--border-radius);
-	box-shadow: var(--box-shadow);
-} 
-.volts { color: var(--volt-color); text-align: right;}
-.amps { color: var(--amp-color); text-align: right; }
-.volts:after { content: "V"; }
-.amps:after { content: "A"; }
-.error { opacity: 0; }
-html, body { margin: 0; padding: 0 }
-</style>
-<script>
-document.addEventListener("DOMContentLoaded", function(e) {
-	let source = new EventSource("/es");
-	let psu = document.getElementById("psu")
-	let volts = psu.querySelector(".volts")
-	let amps = psu.querySelector(".amps")
 
-	source.addEventListener("reload", (e) => {
-		let r = document.getElementById("root")
-		r.href = r.href
-	})
-	source.addEventListener("error", (e) => psu.classList.add("error"))
-	source.addEventListener("open", (e) => psu.classList.remove("error"))
-	source.addEventListener("volts", (e) => volts.innerText = e.data);
-	source.addEventListener("amps", (e) => amps.innerText = e.data);
-});
-</script>
+<head>
+	<title>OSD</title>
+	<link id="root" rel="stylesheet" type="text/css" href="/osd/css/root.css">
+
+	<style type="text/css">
+		#psu {
+			min-width: 5ch;
+			width: min-content;
+			padding: var(--padding);
+			border: var(--border-width) var(--border-style) var(--border-color);
+			font-family: var(--font-family);
+			line-height: var(--line-height);
+			font-size: var(--font-size);
+			font-weight: var(--font-weight);
+			-webkit-text-stroke: var(--text-stroke-width) var(--text-stroke-color);
+			background-color: var(--background-color);
+			transition: opacity .5s;
+			border-radius: var(--border-radius);
+			box-shadow: var(--box-shadow);
+		}
+
+		.volts {
+			color: var(--volt-color);
+			text-align: right;
+		}
+
+		.amps {
+			color: var(--amp-color);
+			text-align: right;
+		}
+
+		.volts:after {
+			content: "V";
+		}
+
+		.amps:after {
+			content: "A";
+		}
+
+		.error {
+			opacity: 0;
+		}
+
+		html,
+		body {
+			margin: 0;
+			padding: 0
+		}
+	</style>
+	<script>
+		document.addEventListener("DOMContentLoaded", function (e) {
+			const source = new EventSource("/es");
+			const psu = document.getElementById("psu")
+			const volts = psu.querySelector(".volts")
+			const amps = psu.querySelector(".amps")
+
+			source.addEventListener("reload", (e) => {
+				const r = document.getElementById("root")
+				r.href = r.href
+			})
+			source.addEventListener("error", (e) => psu.classList.add("error"))
+			source.addEventListener("open", (e) => psu.classList.remove("error"))
+			source.addEventListener("volts", (e) => volts.innerText = e.data);
+			source.addEventListener("amps", (e) => amps.innerText = e.data);
+		});
+	</script>
 </head>
+
 <body>
 	<div id="psu" class="error">
 		<div class="volts" title="Volts"></div>
 		<div class="amps" title="Amps"></div>
 	</div>
 </body>
+
 </html>

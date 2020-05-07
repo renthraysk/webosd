@@ -48,7 +48,7 @@ func main() {
 	osd := New(eventsource.New(ctx))
 
 	// 10 times a second
-	go eventsource.Ticker(ctx, osd, p.Poll, time.Second/10)
+	go osd.Ticker(ctx, p.Poll, time.Second/10)
 
 	// Web server
 	mux := http.NewServeMux()
@@ -64,15 +64,21 @@ func main() {
 	go func() { errCh <- s.ListenAndServe() }()
 
 	sigCh := make(chan os.Signal)
-	signal.Notify(sigCh, os.Interrupt) // cntrl+c to quit
-	select {
-	case err = <-errCh:
-	case s := <-sigCh:
-		err = errors.New(s.String())
+	signal.Notify(sigCh, os.Interrupt, os.Kill) // cntrl+c to quit
+
+	for err == nil {
+		select {
+		case err = <-errCh:
+		case s := <-sigCh:
+			switch s {
+			case os.Interrupt, os.Kill:
+				err = errors.New(s.String())
+			}
+		}
 	}
 	// Shutdown
 	log.Printf("shutting down: %s", err)
-	signal.Reset(os.Interrupt)
+	signal.Reset(os.Interrupt, os.Kill)
 	cancel()
 	close(sigCh)
 	{

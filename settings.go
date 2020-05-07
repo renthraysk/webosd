@@ -2,14 +2,61 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/url"
 	"strconv"
 )
 
+type borderStyle int
+
+const (
+	BorderStyleNone borderStyle = iota
+	BorderStyleHidden
+	BorderStyleDotted
+	BorderStyleDashed
+	BorderStyleSolid
+	BorderStyleDouble
+	BorderStyleGroove
+	BorderStyleRidge
+	BorderStyleInset
+	BorderStyleOutset
+	BorderStyleInitial
+	BorderStyleInherit
+)
+
+var borderStyleNames = [...]string{
+	"none", "hidden", "dotted", "dashed", "solid", "double", "groove", "ridge", "inset", "outset", "initial", "inherit",
+}
+
+var borderStyleMap = map[string]borderStyle{
+	"none":    BorderStyleNone,
+	"hidden":  BorderStyleHidden,
+	"dotted":  BorderStyleDotted,
+	"dashed":  BorderStyleDashed,
+	"solid":   BorderStyleSolid,
+	"double":  BorderStyleDouble,
+	"groove":  BorderStyleGroove,
+	"ridge":   BorderStyleRidge,
+	"inset":   BorderStyleInset,
+	"outset":  BorderStyleOutset,
+	"initial": BorderStyleInitial,
+	"inherit": BorderStyleInherit,
+}
+
+func (b borderStyle) String() string {
+	if b >= 0 && int(b) < len(borderStyleNames) {
+		return borderStyleNames[b]
+	}
+	return fmt.Sprintf("border-style(%d)", b)
+}
+
 type Settings struct {
 	backgroundColor RGBA
 	padding         uint64
+	borderWidth     uint64
+	borderStyle     borderStyle
+	borderColor     RGB
 	borderRadius    uint64
 	voltColor       RGB
 	ampColor        RGB
@@ -33,8 +80,11 @@ func (s *Settings) WriteTo(w io.Writer) (int64, error) {
 	b.WriteString("--volt-color: " + s.voltColor.String() + ";\n")
 	b.WriteString("--amp-color: " + s.ampColor.String() + ";\n")
 	b.WriteString("--padding: " + strconv.FormatUint(s.padding, 10) + "px;\n")
+	b.WriteString("--border-width: " + strconv.FormatUint(s.borderWidth, 10) + "px;\n")
+	b.WriteString("--border-style: " + s.borderStyle.String() + ";\n")
+	b.WriteString("--border-color: " + s.borderColor.String() + ";\n")
 	b.WriteString("--border-radius: " + strconv.FormatUint(s.borderRadius, 10) + "px;\n")
-	b.WriteString("--box-shadow: " + "10px 10px 20px #000000A0" + ";\n")
+	b.WriteString("--box-shadow: " + "5px 5px 10px #000000A0" + ";\n")
 	b.WriteString("--text-stroke-width: " + strconv.FormatUint(s.textStrokeWidth, 10) + "px;\n")
 	b.WriteString("--text-stroke-color: " + s.textStrokeColor.String() + ";\n")
 	b.WriteString("}\n")
@@ -47,35 +97,46 @@ func (s *Settings) Set(v url.Values) {
 	}
 	if alpha := v.Get("backgroundAlpha"); alpha != "" {
 		if a, err := strconv.ParseUint(alpha, 10, 32); err == nil {
-			if a >= 0xFF {
+			if a <= 0 || a >= 0xFF {
 				s.backgroundColor.A = 0xFF
-			} else if a <= 0 {
-				s.backgroundColor.A = 0
 			} else {
 				s.backgroundColor.A = byte(a)
 			}
 		}
 	}
-
 	if padding := v.Get("padding"); padding != "" {
 		if p, err := strconv.ParseUint(padding, 10, 64); err == nil {
 			s.padding = p
 		}
 	}
+
+	if borderWidth := v.Get("borderWidth"); borderWidth != "" {
+		if b, err := strconv.ParseUint(borderWidth, 10, 64); err == nil {
+			s.borderWidth = b
+		}
+	}
+	if borderStyle := v.Get("borderStyle"); borderStyle != "" {
+		if b, ok := borderStyleMap[borderStyle]; ok {
+			s.borderStyle = b
+		}
+	}
+
+	if borderColor := v.Get("borderColor"); borderColor != "" {
+		s.borderColor.UnmarshalString(borderColor)
+	}
+
 	if borderRadius := v.Get("borderRadius"); borderRadius != "" {
 		if b, err := strconv.ParseUint(borderRadius, 10, 64); err == nil {
 			s.borderRadius = b
 		}
 	}
-
 	if voltColor := v.Get("voltColor"); voltColor != "" {
 		s.voltColor.UnmarshalString(voltColor)
 	}
 	if ampColor := v.Get("ampColor"); ampColor != "" {
 		s.ampColor.UnmarshalString(ampColor)
 	}
-	// Validate font, string parameter so have to prevent
-	if fontFamily := v.Get("font"); fontFamily != "" {
+	if fontFamily := v.Get("fontFamily"); fontFamily != "" {
 		s.fontFamily = fontFamily
 	}
 	if fontSize := v.Get("fontSize"); fontSize != "" {
@@ -93,7 +154,6 @@ func (s *Settings) Set(v url.Values) {
 			s.lineHeight = u
 		}
 	}
-
 	if textStrokeWidth := v.Get("textStrokeWidth"); textStrokeWidth != "" {
 		if u, err := strconv.ParseUint(textStrokeWidth, 10, 64); err == nil {
 			s.textStrokeWidth = u
