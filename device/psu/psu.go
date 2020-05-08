@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"math"
 	"math/rand"
 	"time"
 
@@ -62,4 +63,15 @@ func Fake() PSU { return &fake{} }
 
 func (fake) Poll(t time.Time) eventsource.Event {
 	return NewEvent(11.75+rand.Float64(), 1.75+rand.Float64()/2)
+}
+
+type sin struct {
+	x float64
+}
+
+func Sin() PSU { return &sin{} }
+
+func (s *sin) Poll(t time.Time) eventsource.Event {
+	s.x += 1.0 / 20
+	return NewEvent(11+math.Sin(s.x)*4, 2+math.Cos(s.x))
 }
