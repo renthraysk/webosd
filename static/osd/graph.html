@@ -25,16 +25,16 @@
 	</style>
 	<script>
 
-		const maxVolts = 30
-		const maxAmps = 5
+		const maxVolts = 32
+		const maxAmps = 8
 		const tickLength = 5
-		const lineWidth = 2
-
+		
 		function drawLine(ctx, x1, y1, x2, y2) {
 			ctx.beginPath()
 			ctx.moveTo(x1, y1)
 			ctx.lineTo(x2, y2)
 			ctx.stroke()
+			return y2
 		}
 
 		function drawAxis(canvas, voltColor, ampColor) {
@@ -63,38 +63,6 @@
 			}
 		}
 
-		function LineChart(canvas, color, yscale) {
-			const ctx = canvas.getContext("2d")
-			ctx.translate(0, canvas.height)
-			ctx.scale(1, -1)
-
-			ctx.lineWidth = lineWidth
-			ctx.shadowBlur = ctx.lineWidth * 2
-			ctx.strokeStyle = color
-			ctx.shadowColor = color
-			let x1, y, dx = 0
-			return function (e) {
-				if (dx == 0) {
-					dx = e.timeStamp / 64
-				}
-				let x2 = e.timeStamp / 64 - dx
-				if (x2 > canvas.width) {
-					const sx = x2 - x1
-					const img = ctx.getImageData(sx, 0, canvas.width, canvas.height)
-					ctx.putImageData(img, 0, 0)
-					x1 -= sx
-					dx += sx
-					x2 = canvas.width
-				}
-				ctx.beginPath()
-				ctx.moveTo(x1, y)
-				y = parseFloat(e.data) * yscale
-				ctx.lineTo(x2, y)
-				x1 = x2
-				ctx.stroke()
-			}
-		}
-
 		document.addEventListener("DOMContentLoaded", function (e) {
 			const s = getComputedStyle(document.documentElement)
 			const voltColor = s.getPropertyValue("--volt-color").trim()
@@ -108,14 +76,45 @@
 			})
 
 			drawAxis(axis, voltColor, ampColor)
-			source.addEventListener("volts", LineChart(document.getElementById("volts"), voltColor, axis.height / maxVolts))
-			source.addEventListener("amps", LineChart(document.getElementById("amps"), ampColor, axis.height / maxAmps))
+
+			const canvas = document.getElementById("psu")
+			const ctx = canvas.getContext("2d")
+			ctx.translate(0, canvas.height)
+			ctx.scale(1, -1)
+			ctx.lineWidth = 2
+			ctx.shadowBlur = 6
+	
+			let x1 = 0, y1 = 0 , y2 = 0, dx
+		
+			source.addEventListener("psu", (e) => {
+				const d = JSON.parse(e.data)
+
+				if (dx === undefined) {
+					dx = Math.round(d.time / 32) 
+				}
+				let x2 = Math.round(d.time / 32) - dx
+				if (x2 >= canvas.width) {
+					const sx = x2 - x1
+					const img = ctx.getImageData(sx, 0, canvas.width, canvas.height)
+					ctx.putImageData(img, 0, 0)
+					x1 -= sx
+					dx += sx
+					x2 = canvas.width - 1
+				} 
+				ctx.strokeStyle = voltColor
+				ctx.shadowColor = voltColor
+				y1 = drawLine(ctx, x1, y1, x2, d.volts * canvas.height / maxVolts)
+
+				ctx.strokeStyle = ampColor
+				ctx.shadowColor = ampColor
+				y2 = drawLine(ctx, x1, y2, x2, d.amps * canvas.height / maxAmps)
+				x1 = x2
+			})
 		});
 	</script>
 </head>
 <body>
-	<canvas id="axis" width="512" height="256"></canvas>
-	<canvas id="amps" width="512" height="256"></canvas>
-	<canvas id="volts" width="512" height="256"></canvas>
+	<canvas id="axis" width="256" height="128"></canvas>
+	<canvas id="psu" width="256" height="128"></canvas>
 </body>
 </html>

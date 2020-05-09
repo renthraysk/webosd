@@ -61,8 +61,11 @@
 			})
 			source.addEventListener("error", (e) => psu.classList.add("error"))
 			source.addEventListener("open", (e) => psu.classList.remove("error"))
-			source.addEventListener("volts", (e) => volts.innerText = e.data);
-			source.addEventListener("amps", (e) => amps.innerText = e.data);
+			source.addEventListener("psu", (e) => {
+				const d = JSON.parse(e.data)
+				volts.innerText = d.volts.toFixed(3)
+				amps.innerText = d.amps.toFixed(3)
+			});
 		});
 	</script>
 </head>
