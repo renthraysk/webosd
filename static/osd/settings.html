@@ -2,142 +2,162 @@
 <html>
 <head>
 	<title>OSD Settings</title>
-<link id="root" rel="stylesheet" type="text/css" href="/osd/css/root.css">
-<style type="text/css">
-#psu {
-	width: min-content;
-	padding: var(--padding);
-	border: var(--border-width) var(--border-style) var(--border-color);
-	font-family: var(--font-family); 
-	line-height: var(--line-height);
-	font-size: var(--font-size);
-	font-weight: var(--font-weight);
-	
-	background-color: var(--background-color);
-	transition: opacity .5s;
-	border-radius: var(--border-radius);
-	box-shadow: var(--box-shadow);
-	
-} 
-.volts {
-	color: var(--volt-color);
-	-webkit-text-stroke: var(--text-stroke-width) var(--text-stroke-color);
-	text-align: right;
-}
-.amps { 
-	color: var(--amp-color);
-	-webkit-text-stroke: var(--text-stroke-width) var(--text-stroke-color);
-	text-align: right; 
-}
-.volts:after { content: "V"; }
-.amps:after { content: "A"; }
-.error { opacity: 0; }
-html,
-body {
-	font-family: sans-serif;
-	background-color: #eee;
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
-	margin: 0;
-	padding: 0;
-}
+	<link id="root" rel="stylesheet" type="text/css" href="/osd/css/root.css">
+	<style type="text/css">
+		#psu {
+			width: min-content;
+			padding: var(--padding);
+			border: var(--border-width) var(--border-style) var(--border-color);
+			font-family: var(--font-family);
+			line-height: var(--line-height);
+			font-size: var(--font-size);
+			font-weight: var(--font-weight);
 
-input.color { font-family: monospace; width: 6em }
+			background-color: var(--background-color);
+			transition: opacity .5s;
+			border-radius: var(--border-radius);
+			box-shadow: var(--box-shadow);
 
-form {
-	display: grid;
-	grid-template-columns: min-content min-content;
-	grid-gap: 5px;
-}
+		}
 
-form>div {
-	white-space: nowrap;
-}
+		.volts {
+			color: var(--volt-color);
+			-webkit-text-stroke: var(--text-stroke-width) var(--text-stroke-color);
+			text-align: right;
+		}
 
-form>label {
-	white-space: nowrap;
-	text-align: right;
-	align-self: end;
-}
+		.amps {
+			color: var(--amp-color);
+			-webkit-text-stroke: var(--text-stroke-width) var(--text-stroke-color);
+			text-align: right;
+		}
 
-form>button[type="submit"] {
-	grid-column-end: span 2;
-}
+		.volts:after {
+			content: "V";
+		}
 
-#font {
-	font-family: var(--font-family);
-}
-</style>
-<script>
+		.amps:after {
+			content: "A";
+		}
 
-function setSelected(options, value) {
-	for (var i = 0; i < options.length; i++) {
-		options[i].selected = options[i].value == value
-	}
-}
+		.error {
+			opacity: 0;
+		}
 
-function setUI(e) {
-	const s = getComputedStyle(document.documentElement)
-	const f = document.forms[0].elements
-	const bgColor = s.getPropertyValue("--background-color").trim()
-	f["backgroundColor"].value = bgColor.substr(0, 7)
-	f["bgColorOutput"].value = f["backgroundColor"].value
-	f["backgroundAlpha"].value = parseInt(bgColor.substr(7, 2), 16)
-	f["bgAlphaOutput"].value = f["backgroundAlpha"].value
-	f["padding"].value = parseInt(s.getPropertyValue("--padding"))
-	f["paddingOutput"].value = f["padding"].value + "px"
+		html,
+		body {
+			font-family: sans-serif;
+			background-color: #eee;
+			width: 100%;
+			height: 100%;
+			overflow: hidden;
+			margin: 0;
+			padding: 0;
+		}
 
-	f["borderWidth"].value = parseInt(s.getPropertyValue("--border-width"))
-	f["borderWidthOutput"].value = f["borderWidth"].value + "px" 
-	
-	setSelected(f["borderStyle"].options, s.getPropertyValue("--border-style").trim())
-	
-	f["borderColor"].value = s.getPropertyValue("--border-color").trim()
-	f["borderColorOutput"].value = f["borderColor"].value 
+		input.color {
+			font-family: monospace;
+			width: 6em
+		}
 
-	f["borderRadius"].value = parseInt(s.getPropertyValue("--border-radius"))
-	f["borderRadiusOutput"].value = f["borderRadius"].value + "px"
+		form {
+			display: grid;
+			grid-template-columns: min-content min-content;
+			grid-gap: 5px;
+		}
 
-	setSelected(f["fontFamily"].options, s.getPropertyValue("--font-family").trim())
-	
-	f["fontSize"].value = parseInt(s.getPropertyValue("--font-size"))
-	f["fontSizeOutput"].value = f["fontSize"].value + "px"
-	f["fontWeight"].value = parseInt(s.getPropertyValue("--font-weight"))
-	f["fntWgtOutput"].value = f["fontWeight"].value
-	f["lineHeight"].value = parseInt(s.getPropertyValue("--line-height"))
-	f["lineHeightOutput"].value = f["lineHeight"].value + "%"
-	f["voltColor"].value = s.getPropertyValue("--volt-color").trim()
-	f["voltColorOutput"].value = f["voltColor"].value
-	f["ampColor"].value = s.getPropertyValue("--amp-color").trim()
-	f["ampColorOutput"].value = f["ampColor"].value
-	
-	f["textStrokeWidth"].value = parseInt(s.getPropertyValue("--text-stroke-width"))
-	f["textStrokeWidthOutput"].value = f["textStrokeWidth"].value + "px"
-	f["textStrokeColor"].value = s.getPropertyValue("--text-stroke-color").trim()
-	f["textStrokeColorOutput"].value = f["textStrokeColor"].value
-}
+		form>div {
+			white-space: nowrap;
+		}
 
-document.addEventListener("DOMContentLoaded", function(e) {
-	console.log("DOMContentLoaded")
-	const source = new EventSource("/es");
-	source.addEventListener("error", (e) => psu.classList.add("error"))
-	source.addEventListener("open", (e) => psu.classList.remove("error"))
+		form>label {
+			white-space: nowrap;
+			text-align: right;
+			align-self: end;
+		}
 
-	const r = document.getElementById("root")
-	source.addEventListener("reload", (e) => {	
-		r.href = "/osd/css/root.css?" + (new Date()).getTime()
-	})
-	r.addEventListener("load", (e) => setUI())
-	setUI()
+		form>button[type="submit"] {
+			grid-column-end: span 2;
+		}
 
-	const psu = document.getElementById("psu")
-	const volts = psu.querySelector(".volts")
-	source.addEventListener("volts", (e) => volts.innerText = e.data);
-	const amps = psu.querySelector(".amps")
-	source.addEventListener("amps", (e) => amps.innerText = e.data);
-});
-</script>
+		#font {
+			font-family: var(--font-family);
+		}
+	</style>
+	<script>
+
+		function setSelected(options, value) {
+			for (var i = 0; i < options.length; i++) {
+				options[i].selected = options[i].value == value
+			}
+		}
+
+		function setUI(e) {
+			const s = getComputedStyle(document.documentElement)
+			const f = document.forms[0].elements
+			const bgColor = s.getPropertyValue("--background-color").trim()
+			f["backgroundColor"].value = bgColor.substr(0, 7)
+			f["bgColorOutput"].value = f["backgroundColor"].value
+			f["backgroundAlpha"].value = parseInt(bgColor.substr(7, 2), 16)
+			f["bgAlphaOutput"].value = f["backgroundAlpha"].value
+			f["padding"].value = parseInt(s.getPropertyValue("--padding"))
+			f["paddingOutput"].value = f["padding"].value + "px"
+
+			f["borderWidth"].value = parseInt(s.getPropertyValue("--border-width"))
+			f["borderWidthOutput"].value = f["borderWidth"].value + "px"
+
+			setSelected(f["borderStyle"].options, s.getPropertyValue("--border-style").trim())
+
+			f["borderColor"].value = s.getPropertyValue("--border-color").trim()
+			f["borderColorOutput"].value = f["borderColor"].value
+
+			f["borderRadius"].value = parseInt(s.getPropertyValue("--border-radius"))
+			f["borderRadiusOutput"].value = f["borderRadius"].value + "px"
+
+			setSelected(f["fontFamily"].options, s.getPropertyValue("--font-family").trim())
+
+			f["fontSize"].value = parseInt(s.getPropertyValue("--font-size"))
+			f["fontSizeOutput"].value = f["fontSize"].value + "px"
+			f["fontWeight"].value = parseInt(s.getPropertyValue("--font-weight"))
+			f["fntWgtOutput"].value = f["fontWeight"].value
+			f["lineHeight"].value = parseInt(s.getPropertyValue("--line-height"))
+			f["lineHeightOutput"].value = f["lineHeight"].value + "%"
+			f["voltColor"].value = s.getPropertyValue("--volt-color").trim()
+			f["voltColorOutput"].value = f["voltColor"].value
+			f["ampColor"].value = s.getPropertyValue("--amp-color").trim()
+			f["ampColorOutput"].value = f["ampColor"].value
+
+			f["textStrokeWidth"].value = parseInt(s.getPropertyValue("--text-stroke-width"))
+			f["textStrokeWidthOutput"].value = f["textStrokeWidth"].value + "px"
+			f["textStrokeColor"].value = s.getPropertyValue("--text-stroke-color").trim()
+			f["textStrokeColorOutput"].value = f["textStrokeColor"].value
+		}
+
+		document.addEventListener("DOMContentLoaded", function (e) {
+			console.log("DOMContentLoaded")
+			const source = new EventSource("/es");
+			source.addEventListener("error", (e) => psu.classList.add("error"))
+			source.addEventListener("open", (e) => psu.classList.remove("error"))
+
+			const r = document.getElementById("root")
+			source.addEventListener("reload", (e) => {
+				r.href = "/osd/css/root.css?" + (new Date()).getTime()
+			})
+			r.addEventListener("load", (e) => setUI())
+			setUI()
+
+			const psu = document.getElementById("psu")
+			const volts = psu.querySelector(".volts")
+			const amps = psu.querySelector(".amps")
+
+			source.addEventListener("psu", (e) => {
+				const d = JSON.parse(e.data)
+				volts.innerText = d.volts.toFixed(3)
+				amps.innerText = d.amps.toFixed(3)
+			});
+
+		});
+	</script>
 </head>
 <body>
 	<div id="psu" class="error">
@@ -147,30 +167,35 @@ document.addEventListener("DOMContentLoaded", function(e) {
 	<form method="post" action="/osd/settings">
 		<label for="bgColor">Background</label>
 		<div>
-			<input type="text" class="color" id="bgColorOutput" oninput="bgColor.value=this.value" >
-			<input type="color" id="bgColor" name="backgroundColor" oninput="bgColorOutput.value=this.value;document.documentElement.style.setProperty('--background-color', this.value + parseInt(bgAlpha.value).toString(16))">			
+			<input type="text" class="color" id="bgColorOutput" oninput="bgColor.value=this.value">
+			<input type="color" id="bgColor" name="backgroundColor"
+				oninput="bgColorOutput.value=this.value;document.documentElement.style.setProperty('--background-color', this.value + parseInt(bgAlpha.value).toString(16))">
 		</div>
 		<label for="bgAlpha">Background Alpha</label>
 		<div>
-			<input type="range" min="0" max="255" id="bgAlpha" name="backgroundAlpha" oninput="bgAlphaOutput.value=parseFloat(this.value);document.documentElement.style.setProperty('--background-color', bgColor.value + parseInt(this.value).toString(16))" >
-			<output id="bgAlphaOutput" for="bgAlpha"></output>		
+			<input type="range" min="0" max="255" id="bgAlpha" name="backgroundAlpha"
+				oninput="bgAlphaOutput.value=parseFloat(this.value);document.documentElement.style.setProperty('--background-color', bgColor.value + parseInt(this.value).toString(16))">
+			<output id="bgAlphaOutput" for="bgAlpha"></output>
 		</div>
 
 		<label for="padding">Padding</label>
 		<div>
-			<input type="range" min="0" max="100" id="padding" name="padding" oninput="paddingOutput.value=parseInt(this.value)+'px';document.documentElement.style.setProperty('--padding', this.value+'px')">
+			<input type="range" min="0" max="100" id="padding" name="padding"
+				oninput="paddingOutput.value=parseInt(this.value)+'px';document.documentElement.style.setProperty('--padding', this.value+'px')">
 			<output name="paddingOutput" for="padding"></output>
 		</div>
 
 		<label for="borderWidth">Border Width</label>
 		<div>
-			<input type="range" min="0" max="100" id="borderWidth" name="borderWidth" oninput="borderWidthOutput.value=parseInt(this.value)+'px';document.documentElement.style.setProperty('--border-width', this.value+'px')">
+			<input type="range" min="0" max="100" id="borderWidth" name="borderWidth"
+				oninput="borderWidthOutput.value=parseInt(this.value)+'px';document.documentElement.style.setProperty('--border-width', this.value+'px')">
 			<output name="borderWidthOutput" for="borderWidth"></output>
 		</div>
-		
+
 		<label for="borderStyle">Border Style</label>
 		<div>
-			<select id="borderStyle" name="borderStyle" oninput="document.documentElement.style.setProperty('--border-style', this.value)">
+			<select id="borderStyle" name="borderStyle"
+				oninput="document.documentElement.style.setProperty('--border-style', this.value)">
 				<option value="none">none</option>
 				<option value="hidden">hidden</option>
 				<option value="dotted">dotted</option>
@@ -185,52 +210,61 @@ document.addEventListener("DOMContentLoaded", function(e) {
 				<option value="inherit">inherit</option>
 			</select>
 		</div>
-	
+
 		<label for="borderColor">Border Color</label>
 		<div>
 			<input type="text" class="color" id="borderColorOutput" oninput="borderColor.value=this.value">
-			<input type="color" id="borderColor" name="borderColor" oninput="borderColorOutput.value=borderColor.value;document.documentElement.style.setProperty('--border-color', this.value)">			
+			<input type="color" id="borderColor" name="borderColor"
+				oninput="borderColorOutput.value=borderColor.value;document.documentElement.style.setProperty('--border-color', this.value)">
 		</div>
 
 		<label for="borderRadius">Border Radius</label>
 		<div>
-			<input type="range" min="0" max="100" id="borderRadius" name="borderRadius" oninput="borderRadiusOutput.value=parseInt(this.value)+'px';document.documentElement.style.setProperty('--border-radius', this.value+'px')">
+			<input type="range" min="0" max="100" id="borderRadius" name="borderRadius"
+				oninput="borderRadiusOutput.value=parseInt(this.value)+'px';document.documentElement.style.setProperty('--border-radius', this.value+'px')">
 			<output name="borderRadiusOutput" for="borderRadius"></output>
 		</div>
 
 		<label for="voltColor">Volts</label>
 		<div>
 			<input type="text" class="color" id="voltColorOutput" oninput="voltColor.value=this.value">
-			<input type="color" id="voltColor" name="voltColor" oninput="voltColorOutput.value=voltColor.value;document.documentElement.style.setProperty('--volt-color', this.value)">			
+			<input type="color" id="voltColor" name="voltColor"
+				oninput="voltColorOutput.value=voltColor.value;document.documentElement.style.setProperty('--volt-color', this.value)">
 		</div>
 
 		<label for="ampColor">Amps</label>
 		<div>
 			<input type="text" class="color" id="ampColorOutput" oninput="ampColor.value=this.value">
-			<input type="color" id="ampColor" name="ampColor" oninput="ampColorOutput.value=ampColor.value;document.documentElement.style.setProperty('--amp-color', this.value)">
+			<input type="color" id="ampColor" name="ampColor"
+				oninput="ampColorOutput.value=ampColor.value;document.documentElement.style.setProperty('--amp-color', this.value)">
 		</div>
 
 		<label for="fontFamily">Font</label>
-		<select id="fontFamily" name="fontFamily" oninput="this.style.fontFamily=this.options[this.selectedIndex].style.fontFamily;document.documentElement.style.setProperty('--font-family', this.value)">
+		<select id="fontFamily" name="fontFamily"
+			oninput="this.style.fontFamily=this.options[this.selectedIndex].style.fontFamily;document.documentElement.style.setProperty('--font-family', this.value)">
 			<option style="font-family: monospace">monospace</option>
 			<option style="font-family: 'Andale Mono', monospace" value="'Andale Mono', monospace">Andale Mono</option>
 			<option style="font-family: Consolas, monospace" value="Consolas, monospace">Consolas</option>
 			<option style="font-family: Courier, monospace" value="Courier, monospace">Courier</option>
 			<option style="font-family: 'Courier New', monospace" value="'Courier New', monospace">Courier New</option>
-			<option style="font-family: 'Lucida Console', monospace" value="'Lucida Console', monospace">Lucida Console</option>
+			<option style="font-family: 'Lucida Console', monospace" value="'Lucida Console', monospace">Lucida Console
+			</option>
 			<option style="font-family: Monaco, monospace" value="Monaco, monospace">Monaco</option>
 			<option style="font-family: 'Roboto Mono', monospace" value="'Roboto Mono', monospace">Roboto Mono</option>
 		</select>
 
 		<label for="fontSize">Font Size</label>
 		<div>
-			<input type="range" min="8" max="128" id="fontSize" name="fontSize" oninput="fontSizeOutput.value=parseInt(this.value)+'px';document.documentElement.style.setProperty('--font-size', this.value+'px')">
+			<input type="range" min="8" max="128" id="fontSize" name="fontSize"
+				oninput="fontSizeOutput.value=parseInt(this.value)+'px';document.documentElement.style.setProperty('--font-size', this.value+'px')">
 			<output name="fontSizeOutput" for="fontSize"></output>
 		</div>
 
 		<label for="fntWgt">Font Weight</label>
 		<div>
-			<input type="range" min="100" max="900" id="fntWgt" name="fontWeight" oninput="fntWgtOutput.value=parseInt(this.value);document.documentElement.style.setProperty('--font-weight', this.value)" step="100">
+			<input type="range" min="100" max="900" id="fntWgt" name="fontWeight"
+				oninput="fntWgtOutput.value=parseInt(this.value);document.documentElement.style.setProperty('--font-weight', this.value)"
+				step="100">
 			<output name="fntWgtOutput" for="fntWgt"></output>
 		</div>
 
@@ -250,7 +284,8 @@ document.addEventListener("DOMContentLoaded", function(e) {
 		<label for="textStrokeColor">Text Stroke Color</label>
 		<div>
 			<input type="text" class="color" id="textStrokeColorOutput" oninput="textStrokeColor.value=this.value">
-			<input type="color" id="textStrokeColor" name="textStrokeColor" oninput="textStrokeColorOutput.value=textStrokeColor.value; document.documentElement.style.setProperty('--text-stroke-color', this.value)">
+			<input type="color" id="textStrokeColor" name="textStrokeColor"
+				oninput="textStrokeColorOutput.value=textStrokeColor.value; document.documentElement.style.setProperty('--text-stroke-color', this.value)">
 		</div>
 		<button type="submit">Apply</button>
 	</form>

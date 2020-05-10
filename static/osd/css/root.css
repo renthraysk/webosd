@@ -1,14 +1,17 @@
 :root {
---background-color: #000000dd;
+--background-color: #000000d2;
 --font-family: monospace;
---font-size: 38px;
---font-weight: 900;
+--font-size: 40px;
+--font-weight: 800;
 --line-height: 100%;
---volt-color: #00AA00;
+--volt-color: #33ff00;
 --amp-color: #ffff00;
 --padding: 10px;
+--border-width: 2px;
+--border-style: outset;
+--border-color: #636363;
 --border-radius: 15px;
---box-shadow: none;
---text-stroke-width: 1px;
+--box-shadow: 5px 5px 10px #000000A0;
+--text-stroke-width: 2px;
 --text-stroke-color: #000000;
 }

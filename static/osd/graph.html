@@ -29,7 +29,9 @@
 		const maxAmps = 8
 		const tickLength = 5
 		
-		function drawLine(ctx, x1, y1, x2, y2) {
+		function drawLine(ctx, x1, y1, x2, y2, style) {
+			ctx.shadowColor = style
+			ctx.strokeStyle = style
 			ctx.beginPath()
 			ctx.moveTo(x1, y1)
 			ctx.lineTo(x2, y2)
@@ -48,18 +50,15 @@
 			const g = ctx.createLinearGradient(0, 0, canvas.width, 0)
 			g.addColorStop(0, voltColor)
 			g.addColorStop(1, ampColor)
-			ctx.strokeStyle = g
-			drawLine(ctx, 0, 1, canvas.width, 1)
+			drawLine(ctx, 0, 1, canvas.width, 1, g)
 
-			ctx.strokeStyle = voltColor
-			drawLine(ctx, tickLength, 0, tickLength, canvas.height)
+			drawLine(ctx, tickLength, 0, tickLength, canvas.height, voltColor)
 			for (let y = 2 * (canvas.height / maxVolts); y <= canvas.height; y += 2 * (canvas.height / maxVolts)) {
-				drawLine(ctx, 0, y, tickLength, y)
+				drawLine(ctx, 0, y, tickLength, y, voltColor)
 			}
-			ctx.strokeStyle = ampColor
-			drawLine(ctx, canvas.width - tickLength, 0, canvas.width - tickLength, canvas.height)
+			drawLine(ctx, canvas.width - tickLength, 0, canvas.width - tickLength, canvas.height, ampColor)
 			for (let y = (canvas.height / maxAmps); y <= canvas.height; y += (canvas.height / maxAmps)) {
-				drawLine(ctx, canvas.width - tickLength, y, canvas.width, y)
+				drawLine(ctx, canvas.width - tickLength, y, canvas.width, y, ampColor)
 			}
 		}
 
@@ -70,11 +69,6 @@
 			const source = new EventSource("/es");
 			const axis = document.getElementById("axis")
 
-			source.addEventListener("reload", (e) => {
-				const r = document.getElementById("root")
-				r.href = r.href
-			})
-
 			drawAxis(axis, voltColor, ampColor)
 
 			const canvas = document.getElementById("psu")
@@ -84,8 +78,7 @@
 			ctx.lineWidth = 2
 			ctx.shadowBlur = 6
 	
-			let x1 = 0, y1 = 0 , y2 = 0, dx
-		
+			let x1 = 0, y1 = 0, y2 = 0, dx
 			source.addEventListener("psu", (e) => {
 				const d = JSON.parse(e.data)
 
@@ -101,14 +94,14 @@
 					dx += sx
 					x2 = canvas.width - 1
 				} 
-				ctx.strokeStyle = voltColor
-				ctx.shadowColor = voltColor
-				y1 = drawLine(ctx, x1, y1, x2, d.volts * canvas.height / maxVolts)
-
-				ctx.strokeStyle = ampColor
-				ctx.shadowColor = ampColor
-				y2 = drawLine(ctx, x1, y2, x2, d.amps * canvas.height / maxAmps)
+				y1 = drawLine(ctx, x1, y1, x2, d.volts * canvas.height / maxVolts, voltColor)
+				y2 = drawLine(ctx, x1, y2, x2, d.amps * canvas.height / maxAmps, ampColor)
 				x1 = x2
+			})
+
+			source.addEventListener("reload", (e) => {
+				const r = document.getElementById("root")
+				r.href = r.href
 			})
 		});
 	</script>
