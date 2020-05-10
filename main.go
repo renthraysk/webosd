@@ -95,7 +95,7 @@ func main() {
 }
 
 func index() http.Handler {
-	tmpl := template.Must(template.ParseFiles("./static/index.gohtml"))
+	tmpl := template.Must(template.ParseFiles("./static/index.html"))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:

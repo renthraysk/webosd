@@ -44,7 +44,6 @@
 
 			ctx.translate(0, canvas.height)
 			ctx.scale(1, -1)
-
 			ctx.lineWidth = 2
 
 			const g = ctx.createLinearGradient(0, 0, canvas.width, 0)
@@ -83,9 +82,9 @@
 				const d = JSON.parse(e.data)
 
 				if (dx === undefined) {
-					dx = Math.round(d.time / 32) 
+					dx = Math.round(d.time / 50) 
 				}
-				let x2 = Math.round(d.time / 32) - dx
+				let x2 = Math.round(d.time / 50) - dx
 				if (x2 >= canvas.width) {
 					const sx = x2 - x1
 					const img = ctx.getImageData(sx, 0, canvas.width, canvas.height)
@@ -101,7 +100,7 @@
 
 			source.addEventListener("reload", (e) => {
 				const r = document.getElementById("root")
-				r.href = r.href
+				r.href = e.data
 			})
 		});
 	</script>

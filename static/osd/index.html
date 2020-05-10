@@ -57,7 +57,7 @@
 
 			source.addEventListener("reload", (e) => {
 				const r = document.getElementById("root")
-				r.href = r.href
+				r.href = e.data
 			})
 			source.addEventListener("error", (e) => psu.classList.add("error"))
 			source.addEventListener("open", (e) => psu.classList.remove("error"))
