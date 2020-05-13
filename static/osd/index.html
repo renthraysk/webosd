@@ -2,10 +2,10 @@
 <html>
 <head>
 	<title>OSD</title>
+	<meta name="viewport" content="wdith=device-width, initial-scale=1">
 	<link id="root" rel="stylesheet" type="text/css" href="/osd/css/root.css">
 	<style type="text/css">
 		#psu {
-			min-width: 5ch;
 			width: min-content;
 			padding: var(--padding);
 			border: var(--border-width) var(--border-style) var(--border-color);
@@ -52,8 +52,8 @@
 		document.addEventListener("DOMContentLoaded", function (e) {
 			const source = new EventSource("/es");
 			const psu = document.getElementById("psu")
-			const volts = psu.querySelector(".volts")
-			const amps = psu.querySelector(".amps")
+			const volts = psu.firstElementChild
+			const amps = volts.nextElementSibling
 
 			source.addEventListener("reload", (e) => {
 				const r = document.getElementById("root")

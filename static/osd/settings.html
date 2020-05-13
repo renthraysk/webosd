@@ -2,6 +2,7 @@
 <html>
 <head>
 	<title>OSD Settings</title>
+	<meta name="viewport" content="wdith=device-width, initial-scale=1">
 	<link id="root" rel="stylesheet" type="text/css" href="/osd/css/root.css">
 	<style type="text/css">
 		#psu {
@@ -287,6 +288,11 @@
 			<input type="color" id="textStrokeColor" name="textStrokeColor"
 				oninput="textStrokeColorOutput.value=textStrokeColor.value; document.documentElement.style.setProperty('--text-stroke-color', this.value)">
 		</div>
+
+
+		<input type="hidden" name="lineWidth" value="2">
+		<input type="hidden" name="blurWidth" value="5">
+
 		<button type="submit">Apply</button>
 	</form>
 </body>

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"html/template"
 	"log"
 	"net"
 	"net/http"
@@ -95,14 +94,12 @@ func main() {
 }
 
 func index() http.Handler {
-	tmpl := template.Must(template.ParseFiles("./static/index.html"))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
-			http.Redirect(w, r, r.URL.String(), http.StatusSeeOther)
+			http.Redirect(w, r, "/index.html", http.StatusSeeOther)
 			return
 		}
-
-		tmpl.ExecuteTemplate(w, "index.gohtml", nil)
+		http.ServeFile(w, r, "./static/index.html")
 	})
 }

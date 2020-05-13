@@ -4,9 +4,11 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/renthraysk/webosd/eventsource"
 )
@@ -48,7 +50,7 @@ func (o *OSD) SetMux(mux *http.ServeMux) {
 			s.Set(r.PostForm)
 
 			if err := writeFile("./static/osd/css", "root.css", &s, 0666); err == nil {
-				o.Publish(eventsource.NewEvent("reload", "/osd/css/root.css"))
+				o.Publish(eventsource.NewEvent("reload", "/osd/css/root.css?"+strconv.FormatUint(rand.Uint64(), 10)))
 			}
 			http.Redirect(w, r, "/osd/settings", http.StatusSeeOther)
 		}

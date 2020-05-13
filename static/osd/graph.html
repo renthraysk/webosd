@@ -1,6 +1,7 @@
 <html>
 <head>
 	<title>OSD Graph</title>
+	<meta name="viewport" content="wdith=device-width, initial-scale=1">
 	<link id="root" rel="stylesheet" type="text/css" href="/osd/css/root.css">
 	<style>
 		html,
@@ -26,7 +27,7 @@
 	<script>
 
 		const maxVolts = 32
-		const maxAmps = 8
+		const maxAmps = 6
 		const tickLength = 5
 		
 		function drawLine(ctx, x1, y1, x2, y2, style) {
@@ -42,6 +43,7 @@
 		function drawAxis(canvas, voltColor, ampColor) {
 			const ctx = canvas.getContext("2d")
 
+			ctx.resetTransform()
 			ctx.translate(0, canvas.height)
 			ctx.scale(1, -1)
 			ctx.lineWidth = 2
@@ -52,55 +54,74 @@
 			drawLine(ctx, 0, 1, canvas.width, 1, g)
 
 			drawLine(ctx, tickLength, 0, tickLength, canvas.height, voltColor)
-			for (let y = 2 * (canvas.height / maxVolts); y <= canvas.height; y += 2 * (canvas.height / maxVolts)) {
+			for (let d = 2 * canvas.height / maxVolts, y = d; y <= canvas.height; y += d) {
 				drawLine(ctx, 0, y, tickLength, y, voltColor)
 			}
 			drawLine(ctx, canvas.width - tickLength, 0, canvas.width - tickLength, canvas.height, ampColor)
-			for (let y = (canvas.height / maxAmps); y <= canvas.height; y += (canvas.height / maxAmps)) {
+			for (let d = canvas.height / maxAmps, y = d; y <= canvas.height; y += d) {
 				drawLine(ctx, canvas.width - tickLength, y, canvas.width, y, ampColor)
 			}
 		}
-
+		
 		document.addEventListener("DOMContentLoaded", function (e) {
 			const s = getComputedStyle(document.documentElement)
-			const voltColor = s.getPropertyValue("--volt-color").trim()
-			const ampColor = s.getPropertyValue("--amp-color").trim()
 			const source = new EventSource("/es");
-			const axis = document.getElementById("axis")
+		
+			let voltColor = s.getPropertyValue("--volt-color").trim()
+			let ampColor = s.getPropertyValue("--amp-color").trim()
+			let lineWidth = parseInt(s.getPropertyValue("--line-width").trim())
+			let blurWidth = parseInt(s.getPropertyValue("--blur-width").trim())
 
-			drawAxis(axis, voltColor, ampColor)
+			drawAxis(document.getElementById("axis"), voltColor, ampColor)
 
-			const canvas = document.getElementById("psu")
-			const ctx = canvas.getContext("2d")
-			ctx.translate(0, canvas.height)
-			ctx.scale(1, -1)
-			ctx.lineWidth = 2
-			ctx.shadowBlur = 6
+			source.addEventListener("psu", function(e) {
+				const canvas = document.getElementById("psu")
+				const ctx = canvas.getContext("2d")
+				ctx.translate(0, canvas.height)
+				ctx.scale(1, -1)
 	
-			let x1 = 0, y1 = 0, y2 = 0, dx
-			source.addEventListener("psu", (e) => {
+				function x(t) { return Math.round(t / 50) }
+				function y(v, m) { return v * canvas.height / m }
+							
 				const d = JSON.parse(e.data)
-
-				if (dx === undefined) {
-					dx = Math.round(d.time / 50) 
-				}
-				let x2 = Math.round(d.time / 50) - dx
-				if (x2 >= canvas.width) {
-					const sx = x2 - x1
-					const img = ctx.getImageData(sx, 0, canvas.width, canvas.height)
-					ctx.putImageData(img, 0, 0)
-					x1 -= sx
-					dx += sx
-					x2 = canvas.width - 1
-				} 
-				y1 = drawLine(ctx, x1, y1, x2, d.volts * canvas.height / maxVolts, voltColor)
-				y2 = drawLine(ctx, x1, y2, x2, d.amps * canvas.height / maxAmps, ampColor)
-				x1 = x2
-			})
-
-			source.addEventListener("reload", (e) => {
-				const r = document.getElementById("root")
-				r.href = e.data
+				let dx = x(d.time)
+				let x1 = 0
+			
+				let yv = y(d.volts, maxVolts)
+				let ya = y(d.amps, maxAmps)
+				this.addEventListener("psu", function(e) {
+					const d = JSON.parse(e.data)
+					let x2 = x(d.time) - dx
+					if (x2 >= canvas.width) {
+						const sx = x2 - x1
+						const img = ctx.getImageData(sx, 0, canvas.width, canvas.height)
+						ctx.putImageData(img, 0, 0)
+						x1 -= sx
+						dx += sx
+						x2 = canvas.width - 1
+					}
+					ctx.lineWidth = lineWidth
+					ctx.shadowBlur = blurWidth
+					yv = drawLine(ctx, x1, yv, x2, y(d.volts, maxVolts), voltColor)
+					ya = drawLine(ctx, x1, ya, x2, y(d.amps, maxAmps), ampColor)
+					x1 = x2
+				})
+			}, {once: true})
+	
+			source.addEventListener("reload", function(e) {
+				const root = document.getElementById("root")
+				const n = document.createElement("link")
+				n.setAttribute("id", "root")
+				n.setAttribute("rel", "stylesheet")
+				n.setAttribute("href", e.data)
+				n.addEventListener("load", function(e) {
+					voltColor = s.getPropertyValue("--volt-color").trim()
+					ampColor = s.getPropertyValue("--amp-color").trim()
+					lineWidth = parseInt(s.getPropertyValue("--line-width").trim())
+					blurWidth = parseInt(s.getPropertyValue("--blur-width").trim())
+					drawAxis(document.getElementById("axis"), voltColor, ampColor)
+				}, {once: true})
+				root.parentElement.replaceChild(n, root)
 			})
 		});
 	</script>

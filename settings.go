@@ -63,9 +63,13 @@ type Settings struct {
 	fontFamily      string
 	fontSize        uint64
 	fontWeight      uint64
+
 	lineHeight      uint64
 	textStrokeWidth uint64
 	textStrokeColor RGB
+
+	lineWidth uint64
+	blurWidth uint64
 }
 
 func (s *Settings) WriteTo(w io.Writer) (int64, error) {
@@ -87,6 +91,8 @@ func (s *Settings) WriteTo(w io.Writer) (int64, error) {
 	b.WriteString("--box-shadow: " + "5px 5px 10px #000000A0" + ";\n")
 	b.WriteString("--text-stroke-width: " + strconv.FormatUint(s.textStrokeWidth, 10) + "px;\n")
 	b.WriteString("--text-stroke-color: " + s.textStrokeColor.String() + ";\n")
+	b.WriteString("--line-width: " + strconv.FormatUint(s.lineWidth, 10) + ";\n")
+	b.WriteString("--blur-width: " + strconv.FormatUint(s.blurWidth, 10) + ";\n")
 	b.WriteString("}\n")
 	return b.WriteTo(w)
 }
@@ -161,5 +167,16 @@ func (s *Settings) Set(v url.Values) {
 	}
 	if textStrokeColor := v.Get("textStrokeColor"); textStrokeColor != "" {
 		s.textStrokeColor.UnmarshalString(textStrokeColor)
+	}
+
+	if lineWidth := v.Get("lineWidth"); lineWidth != "" {
+		if u, err := strconv.ParseUint(lineWidth, 10, 64); err == nil {
+			s.lineWidth = u
+		}
+	}
+	if blurWidth := v.Get("blurWidth"); blurWidth != "" {
+		if u, err := strconv.ParseUint(blurWidth, 10, 64); err == nil {
+			s.blurWidth = u
+		}
 	}
 }
