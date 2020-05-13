@@ -55,9 +55,11 @@
 			const volts = psu.firstElementChild
 			const amps = volts.nextElementSibling
 
-			source.addEventListener("reload", (e) => {
-				const r = document.getElementById("root")
-				r.href = e.data
+			source.addEventListener("reload", function(e) {
+				const root = document.getElementById("root")
+				const n = root.cloneNode(false)
+				n.setAttribute("href", e.data)
+				root.parentElement.replaceChild(n, root)
 			})
 			source.addEventListener("error", (e) => psu.classList.add("error"))
 			source.addEventListener("open", (e) => psu.classList.remove("error"))

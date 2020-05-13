@@ -110,9 +110,7 @@
 	
 			source.addEventListener("reload", function(e) {
 				const root = document.getElementById("root")
-				const n = document.createElement("link")
-				n.setAttribute("id", "root")
-				n.setAttribute("rel", "stylesheet")
+				const n = root.cloneNode(false)
 				n.setAttribute("href", e.data)
 				n.addEventListener("load", function(e) {
 					voltColor = s.getPropertyValue("--volt-color").trim()

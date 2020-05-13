@@ -141,10 +141,13 @@
 			source.addEventListener("open", (e) => psu.classList.remove("error"))
 
 			const r = document.getElementById("root")
-			source.addEventListener("reload", (e) => {
-				r.href = "/osd/css/root.css?" + (new Date()).getTime()
+			source.addEventListener("reload", function(e) {
+				const root = document.getElementById("root")
+				const n = root.cloneNode(false)
+				n.setAttribute("href", e.data)
+				n.addEventListener("load", setUI)
+				root.parentElement.replaceChild(n, root)
 			})
-			r.addEventListener("load", (e) => setUI())
 			setUI()
 
 			const psu = document.getElementById("psu")
