@@ -85,6 +85,7 @@ func (es *EventSource) run(ctx context.Context, cancel context.CancelFunc) {
 
 		case s := <-es.unsubscribeCh:
 			delete(subscribers, s)
+			close(s)
 
 		case <-ctx.Done():
 			return
@@ -120,7 +121,6 @@ func (es *EventSource) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case es.unsubscribeCh <- subscriberCh:
 		default:
 		}
-		close(subscriberCh)
 	}()
 
 	w.Header().Set("Content-Type", "text/event-stream")
