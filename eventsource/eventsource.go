@@ -77,6 +77,7 @@ func (es *EventSource) run(ctx context.Context, cancel context.CancelFunc) {
 				case s <- e:
 				default:
 					delete(subscribers, s)
+					close(s)
 				}
 			}
 
@@ -93,7 +94,7 @@ func (es *EventSource) run(ctx context.Context, cancel context.CancelFunc) {
 	}
 }
 
-// Publisher, implementation of Publisher interface
+// Publish event to all subscribers
 func (es *EventSource) Publish(e Event) bool {
 	select {
 	case es.in <- e:
@@ -143,7 +144,7 @@ func (es *EventSource) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Ticker calls f every d and publishes to publisher
+// Ticker calls f every d and publishes response
 func (es *EventSource) Ticker(ctx context.Context, f func(t time.Time) Event, d time.Duration) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
