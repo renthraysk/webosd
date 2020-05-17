@@ -2,10 +2,11 @@
 <html>
 <head>
 	<title>OSD</title>
-	<meta name="viewport" content="wdith=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link id="root" rel="stylesheet" type="text/css" href="/osd/css/root.css">
 	<style type="text/css">
 		#psu {
+			min-width: 7ch;
 			width: min-content;
 			padding: var(--padding);
 			border: var(--border-width) var(--border-style) var(--border-color);
@@ -15,9 +16,12 @@
 			font-weight: var(--font-weight);
 			-webkit-text-stroke: var(--text-stroke-width) var(--text-stroke-color);
 			background-color: var(--background-color);
-			transition: opacity .5s;
+			transition: opacity 0.5s ease, box-shadow 0.75s ease, transform 0.5s ease;
 			border-radius: var(--border-radius);
 			box-shadow: var(--box-shadow);
+			position: absolute;
+			left: 0px;
+			top: 0px;
 		}
 
 		.volts {
@@ -38,8 +42,12 @@
 			content: "A";
 		}
 
-		.error {
-			opacity: 0;
+		#psu:not(.on) {
+			opacity: 0; box-shadow: none; transform: scale(.5);
+		}
+
+		#psu.error {
+			border: max(var(--border-width), 2px) solid #f00;
 		}
 
 		html,
@@ -49,30 +57,52 @@
 		}
 	</style>
 	<script>
-		document.addEventListener("DOMContentLoaded", function (e) {
+		document.addEventListener("DOMContentLoaded", (e) => {
 			const source = new EventSource("/es");
 			const psu = document.getElementById("psu")
-			const volts = psu.firstElementChild
-			const amps = volts.nextElementSibling
 
-			source.addEventListener("reload", function(e) {
+			window.addEventListener("gamepadconnected", (e) => {
+				let index = e.gamepad.index
+				let b0 = false
+
+				window.addEventListener("gamepaddisconnected", (e) => index = undefined)
+
+				function pressed(previous, button, pressed) {
+					const next = button.pressed || button.value > 0.5
+					if (!previous && next) {
+						pressed()
+					}
+					return next
+				}
+			
+				function updateStatus() {
+					const gamepads = navigator.getGamepads()
+					if (index !== undefined && index >= 0 && index < gamepads.length) {
+						b0 = pressed(b0, gamepads[index].buttons[0], () => psu.classList.toggle("on"))
+						requestAnimationFrame(updateStatus)
+					}
+				}
+				requestAnimationFrame(updateStatus);
+			})
+
+			source.addEventListener("reload", function (e) {
 				const root = document.getElementById("root")
 				const n = root.cloneNode(false)
 				n.setAttribute("href", e.data)
 				root.parentElement.replaceChild(n, root)
 			})
 			source.addEventListener("error", (e) => psu.classList.add("error"))
-			source.addEventListener("open", (e) => psu.classList.remove("error"))
+			source.addEventListener("open", (e) => { psu.classList.remove("error"); psu.classList.add("on"); })
 			source.addEventListener("psu", (e) => {
 				const d = JSON.parse(e.data)
-				volts.innerText = d.volts.toFixed(3)
-				amps.innerText = d.amps.toFixed(3)
-			});
-		});
+				psu.firstElementChild.innerText = d.volts.toFixed(3)
+				psu.lastElementChild.innerText = d.amps.toFixed(3)
+			})
+		})
 	</script>
 </head>
 <body>
-	<div id="psu" class="error">
+	<div id="psu">
 		<div class="volts" title="Volts"></div>
 		<div class="amps" title="Amps"></div>
 	</div>

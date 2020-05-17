@@ -1,8 +1,8 @@
 :root {
---background-color: #000000d2;
---font-family: monospace;
+--background-color: #000000c8;
+--font-family: Consolas, monospace;
 --font-size: 40px;
---font-weight: 800;
+--font-weight: 900;
 --line-height: 100%;
 --volt-color: #00ff00;
 --amp-color: #ffff00;
@@ -15,5 +15,5 @@
 --text-stroke-width: 1px;
 --text-stroke-color: #000000;
 --line-width: 2;
---blur-width: 5;
+--blur-width: 6;
 }

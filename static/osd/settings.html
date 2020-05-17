@@ -2,7 +2,7 @@
 <html>
 <head>
 	<title>OSD Settings</title>
-	<meta name="viewport" content="wdith=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link id="root" rel="stylesheet" type="text/css" href="/osd/css/root.css">
 	<style type="text/css">
 		#psu {
@@ -132,10 +132,15 @@
 			f["textStrokeWidthOutput"].value = f["textStrokeWidth"].value + "px"
 			f["textStrokeColor"].value = s.getPropertyValue("--text-stroke-color").trim()
 			f["textStrokeColorOutput"].value = f["textStrokeColor"].value
+
+			f["lineWidth"].value = parseInt(s.getPropertyValue("--line-width"))
+			f["lineWidthOutput"].value = f["lineWidth"].value 
+
+			f["blurWidth"].value = parseInt(s.getPropertyValue("--blur-width"))
+			f["blurWidthOutput"].value = f["blurWidth"].value 
 		}
 
 		document.addEventListener("DOMContentLoaded", function (e) {
-			console.log("DOMContentLoaded")
 			const source = new EventSource("/es");
 			source.addEventListener("error", (e) => psu.classList.add("error"))
 			source.addEventListener("open", (e) => psu.classList.remove("error"))
@@ -171,29 +176,29 @@
 	<form method="post" action="/osd/settings">
 		<label for="bgColor">Background</label>
 		<div>
-			<input type="text" class="color" id="bgColorOutput" oninput="bgColor.value=this.value">
+			<input type="text" class="color" oninput="bgColor.value=this.value">
 			<input type="color" id="bgColor" name="backgroundColor"
-				oninput="bgColorOutput.value=this.value;document.documentElement.style.setProperty('--background-color', this.value + parseInt(bgAlpha.value).toString(16))">
+				oninput="this.previousSiblingElement.value=this.value;document.documentElement.style.setProperty('--background-color', this.value + parseInt(bgAlpha.value).toString(16))">
 		</div>
 		<label for="bgAlpha">Background Alpha</label>
 		<div>
 			<input type="range" min="0" max="255" id="bgAlpha" name="backgroundAlpha"
-				oninput="bgAlphaOutput.value=parseFloat(this.value);document.documentElement.style.setProperty('--background-color', bgColor.value + parseInt(this.value).toString(16))">
-			<output id="bgAlphaOutput" for="bgAlpha"></output>
+				oninput="this.nextSibilingElement.value=parseFloat(this.value);document.documentElement.style.setProperty('--background-color', bgColor.value + parseInt(this.value).toString(16))">
+			<output for="bgAlpha"></output>
 		</div>
 
 		<label for="padding">Padding</label>
 		<div>
 			<input type="range" min="0" max="100" id="padding" name="padding"
-				oninput="paddingOutput.value=parseInt(this.value)+'px';document.documentElement.style.setProperty('--padding', this.value+'px')">
-			<output name="paddingOutput" for="padding"></output>
+				oninput="this.nextSiblingElement.value=parseInt(this.value)+'px';document.documentElement.style.setProperty('--padding', this.value+'px')">
+			<output for="padding"></output>
 		</div>
 
 		<label for="borderWidth">Border Width</label>
 		<div>
 			<input type="range" min="0" max="100" id="borderWidth" name="borderWidth"
-				oninput="borderWidthOutput.value=parseInt(this.value)+'px';document.documentElement.style.setProperty('--border-width', this.value+'px')">
-			<output name="borderWidthOutput" for="borderWidth"></output>
+				oninput="this.nextSiblingElement.value=parseInt(this.value)+'px';document.documentElement.style.setProperty('--border-width', this.value+'px')">
+			<output for="borderWidth"></output>
 		</div>
 
 		<label for="borderStyle">Border Style</label>
@@ -292,9 +297,20 @@
 				oninput="textStrokeColorOutput.value=textStrokeColor.value; document.documentElement.style.setProperty('--text-stroke-color', this.value)">
 		</div>
 
+		<label for="lineWidth">Line Width</label>
+		<div>
+			<input type="range" min="1" max="8" id="lineWidth" name="lineWidth"
+				oninput="lineWidthOutput.value=parseInt(this.value);document.documentElement.style.setProperty('--line-width', this.value)">
+			<output name="lineWidthOutput" for="lineWidth"></output>
+		</div>
 
-		<input type="hidden" name="lineWidth" value="2">
-		<input type="hidden" name="blurWidth" value="5">
+		<label for="blurWidth">Blur Width</label>
+		<div>
+			<input type="range" min="0" max="8" id="blurWidth" name="blurWidth"
+				oninput="blurWidthOutput.value=parseInt(this.value);document.documentElement.style.setProperty('--blur-width', this.value)">
+			<output name="blurWidthOutput" for="blurWidth"></output>
+		</div>
+
 
 		<button type="submit">Apply</button>
 	</form>

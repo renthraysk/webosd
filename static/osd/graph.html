@@ -1,7 +1,7 @@
 <html>
 <head>
 	<title>OSD Graph</title>
-	<meta name="viewport" content="wdith=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link id="root" rel="stylesheet" type="text/css" href="/osd/css/root.css">
 	<style>
 		html,
@@ -28,11 +28,11 @@
 
 		const maxVolts = 32
 		const maxAmps = 6
-		const tickLength = 5
+		const tickLength = 3
 		
-		function drawLine(ctx, x1, y1, x2, y2, style) {
-			ctx.shadowColor = style
-			ctx.strokeStyle = style
+		function drawLine(ctx, x1, y1, x2, y2, color) {
+			ctx.shadowColor = color
+			ctx.strokeStyle = color
 			ctx.beginPath()
 			ctx.moveTo(x1, y1)
 			ctx.lineTo(x2, y2)
