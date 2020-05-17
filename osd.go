@@ -29,8 +29,6 @@ func (o *OSD) SetMux(mux *http.ServeMux) {
 	mux.HandleFunc("/osd/", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "./static/osd/index.html") })
 	mux.HandleFunc("/osd/graph", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "./static/osd/graph.html") })
 
-	mux.Handle("/osd/js/", http.StripPrefix("/osd/js/", http.FileServer(http.Dir("./static/osd/js/"))))
-
 	mux.HandleFunc("/osd/css/root.css",
 		func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/css")
