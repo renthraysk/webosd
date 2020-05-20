@@ -43,7 +43,9 @@
 		}
 
 		#psu:not(.on) {
-			opacity: 0; box-shadow: none; transform: scale(.5);
+			opacity: 0;
+			box-shadow: none;
+			transform: scale(.5);
 		}
 
 		#psu.error {
@@ -60,30 +62,29 @@
 		document.addEventListener("DOMContentLoaded", (e) => {
 			const source = new EventSource("/es");
 			const psu = document.getElementById("psu")
+			const buttonEvents = [
+				{onPressed: () => psu.classList.toggle("on")},
+			]
+			let index = undefined
 
 			window.addEventListener("gamepadconnected", (e) => {
-				let index = e.gamepad.index
-				let b0 = false
-
-				window.addEventListener("gamepaddisconnected", (e) => index = undefined)
-
-				function pressed(previous, button, pressed) {
-					const next = button.pressed || button.value > 0.5
-					if (!previous && next) {
-						pressed()
-					}
-					return next
-				}
-			
-				function updateStatus() {
+				index = e.gamepad.index
+				requestAnimationFrame(function() {
 					const gamepads = navigator.getGamepads()
 					if (index !== undefined && index >= 0 && index < gamepads.length) {
-						b0 = pressed(b0, gamepads[index].buttons[0], () => psu.classList.toggle("on"))
-						requestAnimationFrame(updateStatus)
+						const buttons = gamepads[index].buttons
+						buttonEvents.forEach((button, index) => {			
+							const next = buttons[index].pressed || buttons[index].value > 0.5
+							if (!button.previous && next) {
+								button.onPressed()
+							}
+							button.previous = next
+						})
+						requestAnimationFrame(arguments.callee)
 					}
-				}
-				requestAnimationFrame(updateStatus);
+				})
 			})
+			window.addEventListener("gamepaddisconnected", (e) => index = undefined)
 
 			source.addEventListener("reload", function (e) {
 				const root = document.getElementById("root")
