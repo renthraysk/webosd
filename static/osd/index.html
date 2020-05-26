@@ -65,33 +65,6 @@
 			const buttonEvents = [
 				{onPressed: () => psu.classList.toggle("on")},
 			]
-			let index = undefined
-
-			window.addEventListener("gamepadconnected", (e) => {
-				index = e.gamepad.index
-				requestAnimationFrame(function() {
-					const gamepads = navigator.getGamepads()
-					if (index !== undefined && index >= 0 && index < gamepads.length) {
-						const buttons = gamepads[index].buttons
-						buttonEvents.forEach((button, index) => {			
-							const next = buttons[index].pressed || buttons[index].value > 0.5
-							if (!button.previous && next) {
-								button.onPressed()
-							}
-							button.previous = next
-						})
-						requestAnimationFrame(arguments.callee)
-					}
-				})
-			})
-			window.addEventListener("gamepaddisconnected", (e) => index = undefined)
-
-			source.addEventListener("reload", function (e) {
-				const root = document.getElementById("root")
-				const n = root.cloneNode(false)
-				n.setAttribute("href", e.data)
-				root.parentElement.replaceChild(n, root)
-			})
 			source.addEventListener("error", (e) => psu.classList.add("error"))
 			source.addEventListener("open", (e) => { psu.classList.remove("error"); psu.classList.add("on"); })
 			source.addEventListener("psu", (e) => {

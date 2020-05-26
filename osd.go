@@ -1,14 +1,8 @@
 package main
 
 import (
-	"io"
-	"io/ioutil"
-	"log"
-	"math/rand"
 	"net/http"
-	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/renthraysk/webosd/eventsource"
 )
@@ -23,60 +17,21 @@ func New(es *eventsource.EventSource) *OSD {
 	}
 }
 
+type HTMLDir struct {
+	d http.Dir
+}
+
+func (d *HTMLDir) Open(name string) (http.File, error) {
+	if ext := filepath.Ext(name); ext == "" {
+		if f, err := d.d.Open(name + ".html"); err == nil {
+			return f, nil
+		}
+	}
+	return d.d.Open(name)
+}
+
 // SetMux sets up handlers for es, the EventSource, index and settings pages.
 func (o *OSD) SetMux(mux *http.ServeMux) {
 	mux.Handle("/es", o)
-	mux.HandleFunc("/osd/", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "./static/osd/index.html") })
-	mux.HandleFunc("/osd/graph", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "./static/osd/graph.html") })
-
-	mux.HandleFunc("/osd/css/root.css",
-		func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/css")
-			w.Header().Set("Cache-Control", "no-cache")
-			http.ServeFile(w, r, "./static/osd/css/root.css")
-		})
-
-	mux.HandleFunc("/osd/settings", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			http.ServeFile(w, r, "static/osd/settings.html")
-
-		case http.MethodPost:
-			var s Settings
-
-			r.ParseForm()
-			s.Set(r.PostForm)
-
-			if err := writeFile("./static/osd/css", "root.css", &s, 0666); err == nil {
-				o.Publish(eventsource.NewEvent("reload", "/osd/css/root.css?"+strconv.FormatUint(rand.Uint64(), 10)))
-			}
-			http.Redirect(w, r, "/osd/settings", http.StatusSeeOther)
-		}
-	})
-}
-
-func logPrintf(r *http.Request, format string, v ...interface{}) {
-	s := r.Context().Value(http.ServerContextKey).(*http.Server)
-	if s != nil && s.ErrorLog != nil {
-		s.ErrorLog.Printf(format, v...)
-		return
-	}
-	log.Printf(format, v...)
-}
-
-func writeFile(path, name string, wt io.WriterTo, perm os.FileMode) error {
-	f, err := ioutil.TempFile(path, name)
-	if err != nil {
-		return err
-	}
-	defer os.Remove(f.Name())
-
-	if _, err := wt.WriteTo(f); err != nil {
-		f.Close()
-		return err
-	}
-	if err := f.Close(); err != nil {
-		return err
-	}
-	return os.Rename(f.Name(), filepath.Join(path, name))
+	mux.Handle("/osd/", http.StripPrefix("/osd/", http.FileServer(&HTMLDir{http.Dir("./static/osd/")})))
 }

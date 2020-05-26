@@ -107,20 +107,6 @@
 					x1 = x2
 				})
 			}, {once: true})
-	
-			source.addEventListener("reload", function(e) {
-				const root = document.getElementById("root")
-				const n = root.cloneNode(false)
-				n.setAttribute("href", e.data)
-				n.addEventListener("load", function(e) {
-					voltColor = s.getPropertyValue("--volt-color").trim()
-					ampColor = s.getPropertyValue("--amp-color").trim()
-					lineWidth = parseInt(s.getPropertyValue("--line-width").trim())
-					blurWidth = parseInt(s.getPropertyValue("--blur-width").trim())
-					drawAxis(document.getElementById("axis"), voltColor, ampColor)
-				}, {once: true})
-				root.parentElement.replaceChild(n, root)
-			})
 		});
 	</script>
 </head>
