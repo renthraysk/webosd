@@ -106,7 +106,7 @@ func (es *EventSource) Publish(e Event) bool {
 
 func (es *EventSource) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "", http.StatusMethodNotAllowed)
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
 	}
 	f, ok := w.(http.Flusher)
