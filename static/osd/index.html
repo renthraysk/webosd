@@ -62,9 +62,6 @@
 		document.addEventListener("DOMContentLoaded", (e) => {
 			const source = new EventSource("/es");
 			const psu = document.getElementById("psu")
-			const buttonEvents = [
-				{onPressed: () => psu.classList.toggle("on")},
-			]
 			source.addEventListener("error", (e) => psu.classList.add("error"))
 			source.addEventListener("open", (e) => { psu.classList.remove("error"); psu.classList.add("on"); })
 			source.addEventListener("psu", (e) => {
