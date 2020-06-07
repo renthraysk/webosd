@@ -142,7 +142,7 @@
 						li.dataset.duration = d.duration.toString().concat('s')
 						window.setTimeout(() => list.removeChild(li), d.duration * 1000)
 					} else {			
-						list.querySelectorAll("li:not(duration)").forEach(l => list.removeChild(l))
+						list.querySelectorAll("li:not(data-duration)").forEach(l => list.removeChild(l))
 					}
 					list.insertBefore(li, list.firstElementChild)
 					if (!footer.classList.contains("on")) {
@@ -179,14 +179,7 @@
 				let index = e.gamepad.index
 
 				window.addEventListener("gamepaddisconnected", (e) => index = undefined)
-				function pressed(previous, button, pressed) {
-					const next = button.pressed || button.value > 0.5
-					if (!previous && next) {
-						pressed()
-					}
-					return next
-				}
-
+		
 				requestAnimationFrame(function() {
 					const gamepads = navigator.getGamepads()
 					if (index !== undefined && index >= 0 && index < gamepads.length) {
@@ -202,9 +195,6 @@
 					}			
 				})
 			})
-
-			window.addEventListener("gamepaddisconnected", (e) => index = undefined)
-
 		})	// DOMContentLoaded
 	</script>
 </head>
