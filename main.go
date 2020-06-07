@@ -79,7 +79,6 @@ func main() {
 	log.Printf("shutting down: %s", err)
 	signal.Reset(os.Interrupt, os.Kill)
 	cancel()
-	close(sigCh)
 	{
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
@@ -87,7 +86,6 @@ func main() {
 			log.Printf("failed to shutdown webserver: %s", err2)
 		}
 	}
-	close(errCh)
 	if err != nil {
 		os.Exit(1)
 	}

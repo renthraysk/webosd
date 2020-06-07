@@ -36,6 +36,22 @@ func NewEvent(event, data string) Event {
 	return eventBytes(b.Bytes())
 }
 
+func NewEventBytes(event string, data []byte) Event {
+	var b bytes.Buffer
+	b.WriteString("event: ")
+	b.WriteString(event)
+	b.WriteString("\ndata: ")
+	for i := bytes.IndexByte(data, '\n'); i >= 0; i = bytes.IndexByte(data, '\n') {
+		i++
+		b.Write(data[:i])
+		b.WriteString("data: ")
+		data = data[i:]
+	}
+	b.Write(data)
+	b.WriteString("\n\n")
+	return eventBytes(b.Bytes())
+}
+
 func (e eventBytes) WriteTo(w io.Writer) (int64, error) {
 	n, err := w.Write([]byte(e))
 	return int64(n), err
@@ -59,12 +75,11 @@ func New(ctx context.Context) *EventSource {
 		subscribeCh:   make(chan Subscriber, 2),
 		unsubscribeCh: make(chan Subscriber, 2),
 	}
-	go es.run(context.WithCancel(ctx))
+	go es.run(ctx)
 	return es
 }
 
-func (es *EventSource) run(ctx context.Context, cancel context.CancelFunc) {
-	defer cancel()
+func (es *EventSource) run(ctx context.Context) {
 	subscribers := make(map[Subscriber]struct{})
 	for {
 		select {
@@ -145,7 +160,7 @@ func (es *EventSource) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // Ticker calls f every d and publishes response
-func (es *EventSource) Ticker(ctx context.Context, f func(t time.Time) Event, d time.Duration) {
+func (es *EventSource) Ticker(ctx context.Context, f func(ctx context.Context, t time.Time) (Event, error), d time.Duration) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	ticker := time.NewTicker(d)
@@ -153,8 +168,10 @@ func (es *EventSource) Ticker(ctx context.Context, f func(t time.Time) Event, d 
 	for {
 		select {
 		case t := <-ticker.C:
-			// @TODO Error handling...
-			es.Publish(f(t))
+			if e, err := f(ctx, t); err == nil {
+				es.Publish(e)
+			} else {
+			}
 
 		case <-ctx.Done():
 			return

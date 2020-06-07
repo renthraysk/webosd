@@ -1,81 +1,238 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" translate="no">
 <head>
 	<title>OSD</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link id="root" rel="stylesheet" type="text/css" href="/osd/css/root.css">
-	<style type="text/css">
-		#psu {
-			min-width: 7ch;
-			width: min-content;
-			padding: var(--padding);
-			border: var(--border-width) var(--border-style) var(--border-color);
-			font-family: var(--font-family);
-			line-height: var(--line-height);
-			font-size: var(--font-size);
-			font-weight: var(--font-weight);
-			-webkit-text-stroke: var(--text-stroke-width) var(--text-stroke-color);
-			background-color: var(--background-color);
-			transition: opacity 0.5s ease, box-shadow 0.75s ease, transform 0.5s ease;
-			border-radius: var(--border-radius);
-			box-shadow: var(--box-shadow);
-			position: absolute;
-			left: 0px;
-			top: 0px;
-		}
-
-		.volts {
-			color: var(--volt-color);
-			text-align: right;
-		}
-
-		.amps {
-			color: var(--amp-color);
-			text-align: right;
-		}
-
-		.volts:after {
-			content: "V";
-		}
-
-		.amps:after {
-			content: "A";
-		}
-
-		#psu:not(.on) {
-			opacity: 0;
-			box-shadow: none;
-			transform: scale(.5);
-		}
-
-		#psu.error {
-			border: max(var(--border-width), 2px) solid #f00;
-		}
-
+	<style type="text/css">		
 		html,
 		body {
+			padding: 0;
 			margin: 0;
-			padding: 0
+			overflow: hidden;
+		}
+
+		:root {
+			--background: #000c;
+			--border-radius: 6px;
+			--border: 1px outset #666;
+			--box-shadow: 5px 5px 10px #000;
+			--padding: 5px;
+		}
+	
+		.device {
+			background: var(--background);
+			border-radius: var(--border-radius);
+			border: var(--border);
+			box-shadow: var(--box-shadow); 
+			padding: var(--padding);
+
+			width: min-content;
+			padding-right: 10px;
+			display: grid;
+			grid-template-columns: min-content min-content;
+			margin: 25px 10px;
+			transform: perspective(300px) rotate3d(0, 1, 0, 30deg); 
+		}
+
+		.device>.label {
+			position: relative;
+			width: 13px;
+			color: #fff;
+			font: bold 12px sans-serif;
+			text-transform: uppercase;
+		}
+
+		.device>.label>div {
+			transform-origin: 50% 100%;
+			transform: rotate(270deg);
+			position: absolute;
+			left: 0;
+			bottom: 50%;
+		}
+
+		body:not(.on) .device>.label { color: #000; }
+	
+		.value {
+			font: 900 40px monospace;
+			text-align: right;
+			line-height: 100%;
+			-webkit-text-stroke: 1px #000;
+			white-space: nowrap;
+			width: 7ch;
+		}
+			
+		.voltage.value { color: #0f0; }
+		.current.value { color: #ff0; }
+		.resistance.value { color: #f0f; }
+		.frequency.value { color: #0ff; }
+		.temperature.value { color: #f00; }
+			
+		.dmm .modes { margin: 0; padding: 0; list-style: none;  font: bold 10px sans-serif; color: #fff; text-transform: uppercase; white-space: nowrap; }
+		.dmm .modes>li { display: none; }
+		.dmm.dc-voltage .modes>.dc-voltage,
+		.dmm.ac-voltage .modes>.ac-voltage,
+		.dmm.dc-current .modes>.dc-current,
+		.dmm.ac-current .modes>.ac-current,
+		.dmm.two-wire-resistance .modes>.two-wire-resistance,
+		.dmm.four-wire-resistance .modes>.four-wire-resistance,
+		.dmm.frequency .modes>.frequency,
+		.dmm.temperature .modes>.temperature
+		{ display: block; }		
+
+		footer {
+
+			position: absolute;
+			left: 0;
+			right: 0;
+			bottom: 0;
+
+			transform: translateY(100px);
+			transition: transform 1s ease;
+
+			background: #111;
+		/*
+			border-radius: var(--border-radius);
+			border: var(--border);
+			box-shadow: var(--box-shadow); 
+		*/
+			padding: var(--padding);
+			
+			color: #fff; 
+			font: 32px "Ubuntu Condensed";
+			text-align: justify;
+		}
+		footer ul { margin: 0; padding: 0; list-style: none; }
+
+		footer ul li { display: none; }
+		footer ul li:first-child { display: list-item;  }
+		footer.on {
+			transform: translateY(0);
 		}
 	</style>
-	<script>
-		document.addEventListener("DOMContentLoaded", (e) => {
-			const source = new EventSource("/es");
-			const psu = document.getElementById("psu")
-			source.addEventListener("error", (e) => psu.classList.add("error"))
-			source.addEventListener("open", (e) => { psu.classList.remove("error"); psu.classList.add("on"); })
-			source.addEventListener("psu", (e) => {
+	<script type="text/javascript" src="js/units.js"></script>
+	<script type="text/javascript" src="js/obswebsocket.js"></script>
+	<script>	
+		function attachPSU(psu) {
+			const v = psu.querySelector(".voltage.value") 
+			const c = psu.querySelector(".current.value")
+
+			return e => {
 				const d = JSON.parse(e.data)
-				psu.firstElementChild.innerText = d.volts.toFixed(3)
-				psu.lastElementChild.innerText = d.amps.toFixed(3)
+				v.innerText = Voltage.format(Metric, d.voltage)
+				c.innerText = Current.format(Metric, d.current)
+			}
+		}
+
+		document.addEventListener("DOMContentLoaded", (e) => {
+			const s = new EventSource("/es");
+			const footer = document.getElementById("footer")
+			const list = footer.querySelector(".text")
+			s.addEventListener("error", e => document.body.classList.add("error"))
+			s.addEventListener("open", e => { document.body.classList.remove("error"); document.body.classList.add("on"); })
+			s.addEventListener("psu", attachPSU(document.getElementById("psu")))
+			s.addEventListener("footer", e => {
+				const d = JSON.parse(e.data)
+
+				switch (d.command) {
+				case "off":
+					footer.classList.remove("on")
+				case "text":
+					const li = document.createElement("li")
+					li.appendChild(document.createTextNode(d.text))
+
+					if (d.duration > 0) {
+						li.dataset.duration = d.duration.toString().concat('s')
+						window.setTimeout(() => list.removeChild(li), d.duration * 1000)
+					} else {			
+						list.querySelectorAll("li:not(duration)").forEach(l => list.removeChild(l))
+					}
+					list.insertBefore(li, list.firstElementChild)
+					if (!footer.classList.contains("on")) {
+						footer.classList.add("on")
+					}
+				}
 			})
-		})
+
+			// OBS WebSocket connection
+			const ows = new OBSWebSocket("ws://localhost:4444", "password")
+				// If have OBS WebConnect enabled...  gamepad buttons.
+		
+
+			const buttonEvents = [
+				{ onPressed: () => ows.takeSourceScreenshot("Scene")
+					.then(m => {
+						const img = document.createElement("img")
+						img.src = m.img
+						document.documentElement.appendChild(img)
+					})
+				}
+			]
+
+			window.addEventListener("gamepadconnected", (e) => {
+				let index = e.gamepad.index
+
+				window.addEventListener("gamepaddisconnected", (e) => index = undefined)
+				function pressed(previous, button, pressed) {
+					const next = button.pressed || button.value > 0.5
+					if (!previous && next) {
+						pressed()
+					}
+					return next
+				}
+
+				requestAnimationFrame(function() {
+					const gamepads = navigator.getGamepads()
+					if (index !== undefined && index >= 0 && index < gamepads.length) {
+						const buttons = gamepads[index].buttons
+						buttonEvents.forEach((button, index) => {			
+							const next = buttons[index].pressed || buttons[index].value > 0.5
+							if (!button.previous && next) {
+								button.onPressed()
+							}
+							button.previous = next
+						})
+						requestAnimationFrame(arguments.callee)
+					}			
+				})
+			})
+
+			window.addEventListener("gamepaddisconnected", (e) => index = undefined)
+
+		})	// DOMContentLoaded
 	</script>
 </head>
 <body>
-	<div id="psu">
-		<div class="volts" title="Volts"></div>
-		<div class="amps" title="Amps"></div>
+	<div class="device psu" id="psu">
+		<div class="label">
+			<div>PSU</div>
+		</div>
+		<div class="values">
+			<div class="voltage value">19.000V</div>
+			<div class="current value">2.000A</div>
+		</div>
 	</div>
+
+	<div class="device dmm temperature">
+		<div class="label">
+			<div>DMM</div>
+		</div>
+		<div>
+			<ul class="modes">
+				<li class="dc-voltage">dc voltage</li>
+				<li class="ac-voltage">ac voltage</li>
+				<li class="dc-current">dc current</li>
+				<li class="ac-current">ac current</li>
+				<li class="two-wire-resistance">two wire resistance</li>
+				<li class="four-wire-resistance">four wire resistance</li>
+				<li class="temperature">temperature</li>
+				<li class="frequency">frequency</li>
+			</ul>
+			<div class="temperature value">11.000K</div>
+		</div>
+	</div>
+
+	<footer id="footer" class="on">
+		<ul class="text"></ul>
+	</footer> 
 </body>
 </html>
