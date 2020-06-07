@@ -13,8 +13,9 @@ Navigate to [http://localhost:8080/osd/](http://localhost:8080/osd/)
 
 ### OBS Studio
 
-Use the Browser plugin, with the URL set to [http://localhost:8080/osd/](http://localhost:8080/osd/) for read out,
-[http://localhost:8080/osd/graph](http://localhost:8080/osd/graph) for a line chart
+Use the Browser plugin, with the URL set to [http://localhost:8080/osd/](http://localhost:8080/osd/) for overlay.
+
+[http://localhost:8080/osd/footer.html](http://localhost:8080/osd/footer.html) For adding a permenant or temporary footer text.
 
 ## Settings
 
@@ -28,7 +29,3 @@ Usage of ./webosd:
   -version
     	version
 ```
-
-### Web
-
-[http://localhost:8080/osd/settings](http://localhost:8080/osd/settings) provides a UI to change presentation settings live.
