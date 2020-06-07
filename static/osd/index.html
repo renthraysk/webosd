@@ -79,8 +79,11 @@
 		.dmm.temperature .modes>.temperature
 		{ display: block; }		
 
-		footer {
 
+		div.mute { display: none; position: absolute; top: 10px; right: 10px; font-size: 50px; color: #888; }
+		.muted div.mute { display: block; }
+
+		footer {
 			position: absolute;
 			left: 0;
 			right: 0;
@@ -90,11 +93,6 @@
 			transition: transform 1s ease;
 
 			background: #111;
-		/*
-			border-radius: var(--border-radius);
-			border: var(--border);
-			box-shadow: var(--box-shadow); 
-		*/
 			padding: var(--padding);
 			
 			color: #fff; 
@@ -157,6 +155,14 @@
 			const ows = new OBSWebSocket("ws://localhost:4444", "password")
 				// If have OBS WebConnect enabled...  gamepad buttons.
 		
+			ows.addEventListener("SourceMuteStateChanged", e => {
+				const cl = document.documentElement.classList
+				if (!e.detail.muted) {
+					cl.remove("muted")
+				} else if (!cl.contains("muted")) {
+					cl.add("muted")
+				}	
+			})
 
 			const buttonEvents = [
 				{ onPressed: () => ows.takeSourceScreenshot("Scene")
@@ -164,8 +170,9 @@
 						const img = document.createElement("img")
 						img.src = m.img
 						document.documentElement.appendChild(img)
-					})
-				}
+					})},
+				{ onPressed: () => ows.setMute("Scene", true) },			// Mute
+				{ onPressed: () => ows.setMute("Scene", false) },			// Unmute
 			]
 
 			window.addEventListener("gamepadconnected", (e) => {
@@ -202,6 +209,9 @@
 	</script>
 </head>
 <body>
+
+	<div class="mute">🔇</div>
+
 	<div class="device psu" id="psu">
 		<div class="label">
 			<div>PSU</div>

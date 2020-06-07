@@ -13,11 +13,10 @@ class OBSWebSocket extends EventTarget {
 		
 		this.ws.addEventListener("message", e => {
 			const m = JSON.parse(e.data)
-
-			if ('message-id' in m) {
-				const id = m["message-id"]
-				if (id in this.promises) {
-					const p = this.promises[id]
+			const id = m["message-id"]
+			if (id) {
+				const p = this.promises[id]
+				if (p) {
 					delete this.promises[id]
 					switch (m.status) {
 					case "error":
@@ -26,6 +25,10 @@ class OBSWebSocket extends EventTarget {
 						p.resolve(m)
 					}
 				}
+				return
+			}
+			if ('update-type' in m) {
+				this.dispatchEvent(new CustomEvent(m["update-type"], {detail: m}))
 			}
 		})
 		this.ws.addEventListener("close", e => this.dispatchEvent(new CustomEvent("close", {})))
@@ -39,6 +42,10 @@ class OBSWebSocket extends EventTarget {
 			this.promises[id] = {resolve, reject}
 			this.ws.send(JSON.stringify(msg))
 		})
+	}
+
+	setMute(source, mute) {
+		this.send("SetMute", {source, mute})
 	}
 
 	takeSourceScreenshot(sourceName, embedPictureFormat = "png", width = 480, height = 270) {
