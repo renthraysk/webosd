@@ -80,7 +80,7 @@
 		{ display: block; }		
 
 
-		div.mute { display: none; position: absolute; top: 10px; right: 10px; font-size: 50px; color: #888; }
+		div.mute { display: none; position: absolute; top: 10px; right: 10px; font-size: 75px; color: #888; }
 		.muted div.mute { display: block; }
 
 		footer {
@@ -151,30 +151,35 @@
 				}
 			})
 
+			let buttonEvents = {};
+			function registerButton(index, onClicked) {
+				buttonEvents[index] = { onClicked }
+			}
+
 			// OBS WebSocket connection
 			const ows = new OBSWebSocket("ws://localhost:4444", "password")
-				// If have OBS WebConnect enabled...  gamepad buttons.
-		
-			ows.addEventListener("SourceMuteStateChanged", e => {
-				const cl = document.documentElement.classList
-				if (!e.detail.muted) {
-					cl.remove("muted")
-				} else if (!cl.contains("muted")) {
-					cl.add("muted")
-				}	
+
+			ows.addEventListener("open", e => {				
+				ows.getCurrentScene().then(s => {
+					let currentScene = s.name
+
+					ows.addEventListener("SwitchScenes", e => {
+						currentScene = e.detail["scene-name"]
+					})
+							
+					ows.addEventListener("SourceMuteStateChanged", e => {
+						const cl = document.documentElement.classList
+						if (!e.detail.muted) {
+							cl.remove("muted")
+						} else if (!cl.contains("muted")) {
+							cl.add("muted")
+						}	
+					})
+
+					registerButton(0, () => ows.toggleMute(currentScene))
+				})
 			})
-
-			const buttonEvents = [
-				{ onPressed: () => ows.takeSourceScreenshot("Scene")
-					.then(m => {
-						const img = document.createElement("img")
-						img.src = m.img
-						document.documentElement.appendChild(img)
-					})},
-				{ onPressed: () => ows.setMute("Scene", true) },			// Mute
-				{ onPressed: () => ows.setMute("Scene", false) },			// Unmute
-			]
-
+	
 			window.addEventListener("gamepadconnected", (e) => {
 				let index = e.gamepad.index
 
@@ -187,7 +192,7 @@
 						buttonEvents.forEach((button, index) => {			
 							const next = buttons[index].pressed || buttons[index].value > 0.5
 							if (!button.previous && next) {
-								button.onPressed()
+								button.onClicked()
 							}
 							button.previous = next
 						})

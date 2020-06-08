@@ -44,8 +44,16 @@ class OBSWebSocket extends EventTarget {
 		})
 	}
 
+	async getCurrentScene() { 
+		return this.send("GetCurrentScene", {})
+	}
+
 	setMute(source, mute) {
 		this.send("SetMute", {source, mute})
+	}
+
+	toggleMute(source) {
+		this.send("ToggleMute", {source})
 	}
 
 	takeSourceScreenshot(sourceName, embedPictureFormat = "png", width = 480, height = 270) {
